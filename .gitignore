@@ -1,4 +1,4 @@
 /.idea
 /venv
-/PTB
 .DS_Store
+/PTB-dataset

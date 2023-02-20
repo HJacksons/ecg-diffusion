@@ -12,7 +12,7 @@ ACTION = 'train'  # train | test | generate_outputs
 
 # CONFIGURATION
 train_configuration = {
-    'DATASET_OPTION': ['../PTB'],  # synthetic | PTB | PTB_pathologic | ['synthetic', 'PTB']
+    'DATASET_OPTION': ['../PTB-dataset'],  # synthetic | PTB | PTB_pathologic | ['synthetic', 'PTB']
     'NETWORK_OPTION': 'AE',  # GAN | AE
     'TRAINING_MODE': 'simple',  # simple | transfer
     'LEARNING_RATE': 0.0001,
