@@ -1,4 +1,3 @@
-#%%
 from network import Pulse2pulseGenerator
 from datasets import PTB_Dataset, TensorDataset
 
@@ -9,22 +8,20 @@ from typing import Tuple
 import random
 from datetime import datetime
 
+ACTION = 'train'  # train | test | generate_outputs
 
-ACTION = 'train'               # train | test | generate_outputs
-
-
-############# CONFIGURATION ###############
+# CONFIGURATION
 train_configuration = {
-    'DATASET_OPTION': ['PTB'],               # synthetic | PTB | PTB_pathologic | ['synthetic', 'PTB']
-    'NETWORK_OPTION': 'AE',                    # GAN | AE
-    'TRAINING_MODE': 'simple',         # simple | transfer
+    'DATASET_OPTION': ['../PTB'],  # synthetic | PTB | PTB_pathologic | ['synthetic', 'PTB']
+    'NETWORK_OPTION': 'AE',  # GAN | AE
+    'TRAINING_MODE': 'simple',  # simple | transfer
     'LEARNING_RATE': 0.0001,
     'MODEL_SIZE': 16,
     'BATCH_SIZE': 32,
     'EPOCHS': 200,
     'DISCRIMINATOR_PATCH_SIZE': 1000
 }
-############################################
+# CONFIGURATION END
 
 
 def fix_seed():
@@ -37,17 +34,20 @@ def fix_seed():
     torch.manual_seed(random_seed)
     torch.cuda.manual_seed(random_seed)
     torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False 
+    torch.backends.cudnn.benchmark = False
+
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-if ACTION=='train':
+if ACTION == 'train':
     fix_seed()
 
 
-def get_dataloader(target='train', batch_size = train_configuration['BATCH_SIZE'], shuffle = True) -> Tuple[TensorDataset, torch.utils.data.DataLoader]:
-    dataset = PTB_Dataset(data_dirs = train_configuration['DATASET_OPTION'], target = target)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size = min(batch_size, len(dataset)), shuffle = shuffle, drop_last = True)
+def get_dataloader(target='train', batch_size=train_configuration['BATCH_SIZE'], shuffle=True) -> Tuple[
+    TensorDataset, torch.utils.data.DataLoader]:
+    dataset = PTB_Dataset(data_dirs=train_configuration['DATASET_OPTION'], target=target)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=min(batch_size, len(dataset)), shuffle=shuffle,
+                                             drop_last=True)
     return dataset, dataloader
 
 
@@ -67,7 +67,7 @@ def train_ae(train_dataset: TensorDataset, train_dataloader, validation_dataset:
             leadsII_VIII = leadsII_VIII.to(device)
 
             output = generator(leadI)
-            train_criterion = criterion(train_dataset.convert_to_millivolts(train_dataset.convert_output(output)), 
+            train_criterion = criterion(train_dataset.convert_to_millivolts(train_dataset.convert_output(output)),
                                         train_dataset.convert_to_millivolts(train_dataset.convert_output(leadsII_VIII)))
             train_loss_average += train_criterion.data.cpu()
             optimizer.zero_grad()
@@ -78,12 +78,7 @@ def train_ae(train_dataset: TensorDataset, train_dataloader, validation_dataset:
         train_loss_plot.append(train_loss_average)
 
 
-
 if ACTION == "train":
     train_dataset, train_dataloader = get_dataloader(target='train')
     validation_dataset, validation_dataloader = get_dataloader(target='validation', batch_size=1, shuffle=False)
     train_ae(train_dataset, train_dataloader, validation_dataset, validation_dataloader)
-
-
-
-# %%
