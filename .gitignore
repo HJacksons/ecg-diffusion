@@ -2,3 +2,4 @@
 /venv
 .DS_Store
 /PTB-dataset
+/src/__pycache__
