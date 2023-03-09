@@ -30,7 +30,6 @@ class Upscale1dLayer_multi_input(nn.Module):
     def forward(self, x1, x2):
         x = torch.cat((x1, x2), dim=1)
         return self.conv1d(self.upsample_layer(x))
-
    
 
 class Pulse2pulseGenerator(nn.Module):

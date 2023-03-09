@@ -1,11 +1,10 @@
-#%%
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 
 def one_param(m):
-    "get model first parameter"
+    """get model first parameter"""
     return next(iter(m.parameters()))
 
 
