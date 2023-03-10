@@ -1,6 +1,7 @@
 from matplotlib.ticker import AutoMinorLocator, MultipleLocator
 from datasets import PTB_Dataset, TensorDataset
 from diffusion_network import UNet
+import configuration as conf
 
 import wandb
 import torch
@@ -8,38 +9,23 @@ import numpy as np
 from pathlib import Path
 from typing import Literal, Tuple
 import random
-from datetime import datetime
 from matplotlib import pyplot as plt
 from tqdm.auto import tqdm
 import logging
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def init_wandb(api_key, project: str, config: dict) -> wandb:
     wandb.login(key=api_key)
-    wandb.init(project=project, entity="ecg_simula", config=config)
+    wandb.init(project=project, entity=conf.WANDB_ENTITY, config=config)
     return wandb
 
 
 logging.basicConfig(format="%(asctime)s - %(levelname)s: %(message)s", level=logging.INFO, datefmt="%I:%M:%S")
 
-############# CONFIGURATION ###############
-train_configuration = {
-    'DATASET_OPTION': 'PTB',
-    'LEARNING_RATE': 0.0003,
-    'BATCH_SIZE': 32,
-    'EPOCHS': 301,
-}
-
-PLOTS_FOLDER = "plots"
-ACTION = 'train'
-USE_WEIGHTS_AND_BIASES = True
-WANDB_KEY = ''  # add your API key here
-############################################
-
-if USE_WEIGHTS_AND_BIASES:
-    wandb = init_wandb(WANDB_KEY, f'{train_configuration["DATASET_OPTION"]}', train_configuration)
+if conf.USE_WEIGHTS_AND_BIASES:
+    wandb = init_wandb(conf.WANDB_KEY, f'{conf.TRAIN_CONFIGURATION["DATASET_OPTION"]}', conf.TRAIN_CONFIGURATION)
 
 
 def create_folder_if_not_exists(folder: str):
@@ -47,7 +33,7 @@ def create_folder_if_not_exists(folder: str):
         Path(folder).mkdir(parents=True, exist_ok=True)
 
 
-create_folder_if_not_exists(PLOTS_FOLDER)
+create_folder_if_not_exists(conf.PLOTS_FOLDER)
 
 
 def create_and_save_plot(generated_leads_II_VIII, filename, file_extension='.png'):
@@ -79,7 +65,7 @@ def fix_seed():
     torch.backends.cudnn.benchmark = False
 
 
-if ACTION == 'train':
+if conf.ACTION == 'train':
     fix_seed()
 
 
@@ -123,7 +109,7 @@ class Diffusion:
                 else:
                     noise = torch.zeros_like(x)
                 x = 1 / torch.sqrt(alpha) * (
-                            x - ((1 - alpha) / (torch.sqrt(1 - alpha_hat))) * predicted_noise) + torch.sqrt(
+                        x - ((1 - alpha) / (torch.sqrt(1 - alpha_hat))) * predicted_noise) + torch.sqrt(
                     beta) * noise
         model.train()
         # x = x.clamp(-1, 1)
@@ -131,9 +117,9 @@ class Diffusion:
         return x
 
 
-def get_dataloader(target='train', batch_size=train_configuration['BATCH_SIZE'], shuffle=True) -> Tuple[
+def get_dataloader(target='train', batch_size=conf.TRAIN_CONFIGURATION['BATCH_SIZE'], shuffle=True) -> Tuple[
     TensorDataset, torch.utils.data.DataLoader]:
-    dataset = PTB_Dataset(data_dirs=train_configuration['DATASET_OPTION'], target=target)
+    dataset = PTB_Dataset(data_dirs=conf.TRAIN_CONFIGURATION['DATASET_OPTION'], target=target)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=min(batch_size, len(dataset)), shuffle=shuffle,
                                              drop_last=True)
     return dataset, dataloader
@@ -146,10 +132,10 @@ diffusion = Diffusion(device=device)
 def train_diffusion(train_dataset: TensorDataset, train_dataloader, validation_dataset: TensorDataset,
                     validation_dataloader):
     model = UNet().to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=train_configuration['LEARNING_RATE'], betas=(0.5, 0.999))
+    optimizer = torch.optim.Adam(model.parameters(), lr=conf.TRAIN_CONFIGURATION['LEARNING_RATE'], betas=(0.5, 0.999))
     train_loss_plot = []
     model.train()
-    for epoch in range(train_configuration['EPOCHS']):
+    for epoch in range(conf.TRAIN_CONFIGURATION['EPOCHS']):
         logging.info(f"Starting epoch {epoch}:")
         train_loss_average = 0
         for batch, (leadI, leadsII_VIII) in enumerate(train_dataloader, 0):
@@ -167,10 +153,10 @@ def train_diffusion(train_dataset: TensorDataset, train_dataloader, validation_d
         train_loss_average /= len(train_dataloader)
 
         sampled_ecg = diffusion.sample(model, n=1)
-        create_and_save_plot(sampled_ecg[0].cpu().detach().numpy(), filename=f'{PLOTS_FOLDER}/ecg{epoch}')
+        create_and_save_plot(sampled_ecg[0].cpu().detach().numpy(), filename=f'{conf.PLOTS_FOLDER}/ecg{epoch}')
 
-        if USE_WEIGHTS_AND_BIASES:
-            plot_filename = f"{PLOTS_FOLDER}/ecg{epoch}"
+        if conf.USE_WEIGHTS_AND_BIASES:
+            plot_filename = f"{conf.PLOTS_FOLDER}/ecg{epoch}"
             wandb.log({"MSE": train_loss_average})
             wandb.log({"ECG": wandb.Image(plot_filename + ".png")})
 
@@ -179,7 +165,7 @@ def train_diffusion(train_dataset: TensorDataset, train_dataloader, validation_d
             print(f'Finished epoch {epoch}. Average loss for this epoch: {train_loss_average:05f}')
 
 
-if ACTION == "train":
+if conf.ACTION == "train":
     train_dataset, train_dataloader = get_dataloader(target='train')
     validation_dataset, validation_dataloader = get_dataloader(target='validation', batch_size=1, shuffle=False)
     train_diffusion(train_dataset, train_dataloader, validation_dataset, validation_dataloader)
