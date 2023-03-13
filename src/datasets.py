@@ -1,9 +1,9 @@
 from typing import Literal, Tuple, Union
-import pandas as pd
-import glob
-import torch
 from torch.utils.data import Dataset
+import pandas as pd
 import random
+import torch
+import glob
 
 
 class TensorDataset(Dataset):
