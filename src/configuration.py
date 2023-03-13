@@ -17,7 +17,7 @@ USE_WEIGHTS_AND_BIASES = os.getenv("USE_WEIGHTS_AND_BIASES").lower() in ('true',
 
 # Train
 TRAIN_CONFIGURATION = {
-    'DATASET_OPTION': '../PTB-dataset',
+    'DATASET_OPTION': os.path.abspath("../PTB-dataset"),
     'LEARNING_RATE': 0.0003,
     'BATCH_SIZE': 32,
     'EPOCHS': 301,
