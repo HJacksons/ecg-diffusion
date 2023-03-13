@@ -1,4 +1,3 @@
-from datasets import TensorDataset
 from diffusion_network import UNet
 from learning import Diffusion
 import configuration as conf
@@ -9,6 +8,7 @@ import torch
 
 logging.basicConfig(format="%(asctime)s - %(levelname)s: %(message)s", level=logging.INFO, datefmt="%I:%M:%S")
 
+# Init WANDB if needed
 if conf.USE_WEIGHTS_AND_BIASES:
     wandb = helpers.init_wandb(
         conf.WANDB_KEY,
@@ -16,19 +16,25 @@ if conf.USE_WEIGHTS_AND_BIASES:
         conf.TRAIN_CONFIGURATION
     )
 
+# Prep for training
 helpers.create_folder_if_not_exists(conf.PLOTS_FOLDER)
-
-if conf.ACTION == 'train':
+if conf.ACTION == "train":
     helpers.fix_seed()
 
-mse = torch.nn.MSELoss()
-diffusion = Diffusion(device=conf.DEVICE)
 
-
-def train_diffusion(train_dataset: TensorDataset, train_dataloader, validation_dataset: TensorDataset,
-                    validation_dataloader):
+def training_loop():
+    # Model and learning method
     model = UNet().to(conf.DEVICE)
+    diffusion = Diffusion(device=conf.DEVICE)
+
+    # Error function and optimizer
+    mse = torch.nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=conf.TRAIN_CONFIGURATION['LEARNING_RATE'], betas=(0.5, 0.999))
+
+    # Data and data loaders
+    train_dataset, train_dataloader = helpers.get_dataloader(target='train')
+    validation_dataset, validation_dataloader = helpers.get_dataloader(target='validation', batch_size=1, shuffle=False)
+
     train_loss_plot = []
     model.train()
 
@@ -62,7 +68,6 @@ def train_diffusion(train_dataset: TensorDataset, train_dataloader, validation_d
             print(f'Finished epoch {epoch}. Average loss for this epoch: {train_loss_average:05f}')
 
 
+# Run training loop
 if conf.ACTION == "train":
-    train_dataset, train_dataloader = helpers.get_dataloader(target='train')
-    validation_dataset, validation_dataloader = helpers.get_dataloader(target='validation', batch_size=1, shuffle=False)
-    train_diffusion(train_dataset, train_dataloader, validation_dataset, validation_dataloader)
+    training_loop()
