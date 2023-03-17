@@ -10,9 +10,9 @@ import wandb
 import torch
 
 
-def init_wandb(api_key, project: str, config: dict) -> wandb:
-    wandb.login(key=api_key)
-    wandb.init(project=project, entity=conf.WANDB_ENTITY, config=config)
+def init_wandb() -> wandb:
+    wandb.login(key=conf.WANDB_KEY)
+    wandb.init(project=conf.WANDB_PROJECT, entity=conf.WANDB_ENTITY, config=conf.TRAIN_CONFIGURATION)
     return wandb
 
 

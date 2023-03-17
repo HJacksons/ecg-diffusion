@@ -13,6 +13,7 @@ ACTION = 'train'
 # Weights and Biases
 WANDB_KEY = os.getenv("WANDB_KEY")
 WANDB_ENTITY = os.getenv("WANDB_ENTITY")
+WANDB_PROJECT = os.getenv("WANDB_PROJECT")
 USE_WEIGHTS_AND_BIASES = os.getenv("USE_WEIGHTS_AND_BIASES").lower() in ('true', '1')
 
 # Train

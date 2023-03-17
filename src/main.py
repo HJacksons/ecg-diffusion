@@ -10,11 +10,7 @@ logging.basicConfig(format="%(asctime)s - %(levelname)s: %(message)s", level=log
 
 # Init WANDB if needed
 if conf.USE_WEIGHTS_AND_BIASES:
-    wandb = helpers.init_wandb(
-        conf.WANDB_KEY,
-        f'{conf.TRAIN_CONFIGURATION["DATASET_OPTION"]}',
-        conf.TRAIN_CONFIGURATION
-    )
+    wandb = helpers.init_wandb()
 
 # Prep for training
 helpers.create_folder_if_not_exists(conf.PLOTS_FOLDER)
@@ -62,11 +58,26 @@ def training_loop():
             plot_filename = f"{conf.PLOTS_FOLDER}/ecg{epoch}"
             wandb.log({"MSE": train_loss_average})
             wandb.log({"ECG": wandb.Image(plot_filename + ".png")})
-
         else:
             train_loss_plot.append(train_loss_average)
             print(f'Finished epoch {epoch}. Average loss for this epoch: {train_loss_average:05f}')
 
+
+# Hyperparameter tuning search space
+sweep_configuration = {
+    'method': 'random',
+    'metric': {'goal': 'minimize', 'name': 'score'},
+    'parameters':
+        {
+            'x': {'max': 0.1, 'min': 0.01},
+            'y': {'values': [1, 3, 7]},
+        }
+}
+
+# Start the sweep
+if conf.USE_WEIGHTS_AND_BIASES:
+    sweep_id = wandb.sweep(sweep=sweep_configuration, project=conf.WANDB_PROJECT)
+    wandb.agent(sweep_id, function=training_loop, count=10)
 
 # Run training loop
 if conf.ACTION == "train":
