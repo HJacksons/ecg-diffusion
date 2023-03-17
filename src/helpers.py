@@ -15,8 +15,7 @@ def init_wandb() -> wandb:
     wandb.init(
         project=conf.WANDB_PROJECT,
         entity=conf.WANDB_ENTITY,
-        config=conf.HYPER_PARAMETERS,
-        dir="../data"
+        config=conf.HYPER_PARAMETERS
     )
     return wandb
 
