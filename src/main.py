@@ -25,7 +25,7 @@ def training_loop():
 
     # Error function and optimizer
     mse = torch.nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=conf.TRAIN_CONFIGURATION['LEARNING_RATE'], betas=(0.5, 0.999))
+    optimizer = torch.optim.Adam(model.parameters(), lr=conf.HYPER_PARAMETERS['LEARNING_RATE'], betas=(0.5, 0.999))
 
     # Data and data loaders
     train_dataset, train_dataloader = helpers.get_dataloader(target='train')
@@ -34,7 +34,7 @@ def training_loop():
     train_loss_plot = []
     model.train()
 
-    for epoch in range(conf.TRAIN_CONFIGURATION['EPOCHS']):
+    for epoch in range(conf.EPOCHS):
         logging.info(f"Starting epoch {epoch}:")
         train_loss_average = 0
         for batch, (leadI, leadsII_VIII) in enumerate(train_dataloader, 0):
@@ -56,8 +56,10 @@ def training_loop():
 
         if conf.USE_WEIGHTS_AND_BIASES:
             plot_filename = f"{conf.PLOTS_FOLDER}/ecg{epoch}"
-            wandb.log({"MSE": train_loss_average})
-            wandb.log({"ECG": wandb.Image(plot_filename + ".png")})
+            wandb.log({
+                "MSE": train_loss_average,
+                "ECG": wandb.Image(plot_filename + ".png")
+            })
         else:
             train_loss_plot.append(train_loss_average)
             print(f'Finished epoch {epoch}. Average loss for this epoch: {train_loss_average:05f}')
