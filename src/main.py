@@ -5,6 +5,7 @@ import logging
 import helpers
 import wandb
 import torch
+import yaml
 
 logging.basicConfig(format="%(asctime)s - %(levelname)s: %(message)s", level=logging.INFO, datefmt="%I:%M:%S")
 
@@ -12,9 +13,9 @@ logging.basicConfig(format="%(asctime)s - %(levelname)s: %(message)s", level=log
 if conf.USE_WEIGHTS_AND_BIASES:
     wandb = helpers.init_wandb()
 
-# Prep for training
+# Prep for training or tuning
 helpers.create_folder_if_not_exists(conf.PLOTS_FOLDER)
-if conf.ACTION == "train":
+if conf.ACTION in ("train", "tune"):
     helpers.fix_seed()
 
 
@@ -25,18 +26,28 @@ def training_loop():
 
     # Error function and optimizer
     mse = torch.nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=conf.HYPER_PARAMETERS['LEARNING_RATE'], betas=(0.5, 0.999))
+    lr = wandb.config.learning_rate if conf.USE_WEIGHTS_AND_BIASES else conf.HYPER_PARAMETERS['learning_rate']
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr, betas=(0.5, 0.999))
 
-    # Data and data loaders
-    train_dataset, train_dataloader = helpers.get_dataloader(target='train')
-    validation_dataset, validation_dataloader = helpers.get_dataloader(target='validation', batch_size=1, shuffle=False)
+    # Data loaders
+    bs = wandb.config.batch_size if conf.USE_WEIGHTS_AND_BIASES else conf.HYPER_PARAMETERS['batch_size']
+    train_dataset, train_dataloader = helpers.get_dataloader(target='train', batch_size=bs)
+
+    # validation_dataset, validation_dataloader = helpers.get_dataloader(
+    #     target='validation',
+    #     batch_size=1,
+    #     shuffle=False
+    # )
 
     train_loss_plot = []
     model.train()
 
-    for epoch in range(conf.EPOCHS):
-        logging.info(f"Starting epoch {epoch}:")
+    # Training loop
+    epochs = wandb.config.epochs if conf.USE_WEIGHTS_AND_BIASES else conf.HYPER_PARAMETERS['epochs']
+    for epoch in range(epochs):
+        logging.info(f"Starting epoch {epoch}/{epochs}:")
         train_loss_average = 0
+
         for batch, (leadI, leadsII_VIII) in enumerate(train_dataloader, 0):
             leadsII_VIII = leadsII_VIII.to(conf.DEVICE)
             t = diffusion.sample_time_steps(leadsII_VIII.shape[0]).to(conf.DEVICE)
@@ -65,22 +76,13 @@ def training_loop():
             print(f'Finished epoch {epoch}. Average loss for this epoch: {train_loss_average:05f}')
 
 
-# Hyperparameter tuning search space
-sweep_configuration = {
-    'method': 'random',
-    'metric': {'goal': 'minimize', 'name': 'score'},
-    'parameters':
-        {
-            'x': {'max': 0.1, 'min': 0.01},
-            'y': {'values': [1, 3, 7]},
-        }
-}
-
-# Start the sweep
-if conf.USE_WEIGHTS_AND_BIASES:
-    sweep_id = wandb.sweep(sweep=sweep_configuration, project=conf.WANDB_PROJECT)
-    wandb.agent(sweep_id, function=training_loop, count=10)
-
-# Run training loop
+# Run action
 if conf.ACTION == "train":
     training_loop()
+elif conf.ACTION == "tune" and conf.USE_WEIGHTS_AND_BIASES:
+    with open('../sweep_conf.yaml', 'r') as file:
+        sweep_configuration = yaml.safe_load(file)
+
+    # todo - fix sweep output dir to be in '../data'
+    sweep_id = wandb.sweep(sweep=sweep_configuration, project=conf.WANDB_PROJECT)
+    wandb.agent(sweep_id, function=training_loop, count=10)
