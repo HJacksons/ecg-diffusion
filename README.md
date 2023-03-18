@@ -1,5 +1,5 @@
-# Electrocardiogram Generation using Diffusion model
-Project description
+# Electrocardiogram Generation using Diffusion
+A latent diffusion model for generating conditioned ECG signals
 
 ## Getting started
 
