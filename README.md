@@ -1,4 +1,4 @@
-# ECG Generation using Diffusion
+# Electrocardiogram Generation using Diffusion model
 Project description
 
 ## Getting started
