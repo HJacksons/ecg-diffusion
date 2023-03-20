@@ -29,7 +29,6 @@ def training_loop():
 
     _, test_dataloader = helpers.get_dataloader(target='test', batch_size=1, shuffle=False)
     lI_VIII, label = next(iter(test_dataloader))
-    print(f'rr test: {label}')
 
     # Error function and optimizer
     mse = torch.nn.MSELoss()
