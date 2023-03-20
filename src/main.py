@@ -50,11 +50,10 @@ def training_loop():
 
     # Training loop
     epochs = wandb.config.epochs if conf.USE_WEIGHTS_AND_BIASES else conf.HYPER_PARAMETERS['epochs']
-    for epoch in range(epochs):
-        logging.info(f"Starting epoch {epoch}/{epochs}:")
+    for epoch in tqdm(range(epochs), desc='Epochs', colour='green', leave=False, position=0):
         train_loss_average = 0
 
-        for batch, (leadsI_VIII, rr) in enumerate(train_dataloader,0):
+        for (leadsI_VIII, rr) in tqdm(train_dataloader, desc='Batch', leave=False, position=1):
             rr = rr.squeeze().to(device=conf.DEVICE)
             
             leadsI_VIII = leadsI_VIII.to(device=conf.DEVICE)
@@ -80,12 +79,10 @@ def training_loop():
         y = label.squeeze().to(device=conf.DEVICE)
 
         # Sampling loop
-        for i, t in tqdm(enumerate(noise_scheduler.timesteps)):
-
+        for t in tqdm(noise_scheduler.timesteps, desc='Sampling', leave=False, position=2):
             # Get model pred
             with torch.no_grad():
                 residual = model(x, t.to(device=conf.DEVICE), y)  # Again, note that we pass in our labels y
-
             # Update sample with step
             x = noise_scheduler.step(residual, t, x).prev_sample
 
