@@ -1,6 +1,8 @@
 /.idea
 /venv
-.DS_Store
 /PTB-dataset
 /src/__pycache__
+/src/wandb
+/src/plots
+.DS_Store
 .env

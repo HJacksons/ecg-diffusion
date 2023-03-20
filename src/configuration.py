@@ -9,7 +9,7 @@ load_dotenv()
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 DATASET_PATH = os.path.abspath("../PTB-dataset")
 PLOTS_FOLDER = os.path.abspath("../data/plots")
-ACTION = "tune"  # Options: ("train", "tune")
+ACTION = "train"  # Options: ("train", "tune")
 
 # Weights and Biases
 WANDB_KEY = os.getenv("WANDB_KEY")
