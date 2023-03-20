@@ -1,4 +1,4 @@
-from diffusion_network import UNet, UNet_conditional
+from diffusion_network import UNet_conditional
 from learning import Diffusion
 import configuration as conf
 import logging
@@ -7,13 +7,7 @@ import wandb
 import torch
 import yaml
 from diffusers import DDPMScheduler
-import pandas as pd
-import random
-from datetime import datetime
-from matplotlib import pyplot as plt
 from tqdm.auto import tqdm
-import torch.nn.functional as F
-import numpy as np
 
 logging.basicConfig(format="%(asctime)s - %(levelname)s: %(message)s", level=logging.INFO, datefmt="%I:%M:%S")
 
@@ -31,7 +25,7 @@ if conf.ACTION in ("train", "tune"):
 
 def training_loop():
     # Model and learning method
-    model = UNet(num_classes=130).to(conf.DEVICE)
+    model = UNet_conditional(num_classes=130).to(conf.DEVICE)
     diffusion = Diffusion(device=conf.DEVICE)
     _, test_dataloader = helpers.get_dataloader(target='test', batch_size=1, shuffle=False)
     lI_VIII, label = next(iter(test_dataloader))
@@ -92,7 +86,7 @@ def training_loop():
 
             # Update sample with step
             x = noise_scheduler.step(residual, t, x).prev_sample
-        ##
+
         #sampled_ecg = diffusion.sample(model, n=1)
 
         helpers.create_and_save_plot(lI_VIII[0].cpu().detach().numpy(), x[0].cpu().detach().numpy(), filename=f'{conf.PLOTS_FOLDER}/ecg{epoch}')

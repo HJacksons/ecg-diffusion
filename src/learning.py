@@ -1,6 +1,7 @@
 import torch
 import logging
 from tqdm.auto import tqdm
+import torch.nn.functional as F
 
 class Diffusion:
     def __init__(self, noise_steps=1000, beta_start=0.0001, beta_end=0.02, img_size=5000, device="cuda"):

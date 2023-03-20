@@ -4,14 +4,14 @@ import torch.nn.functional as F
 
 
 def one_param(m):
-    """get model first parameter"""
+    "get model first parameter"
     return next(iter(m.parameters()))
 
 
 class SelfAttention(nn.Module):
     def __init__(self, channels):
         super(SelfAttention, self).__init__()
-        self.channels = channels        
+        self.channels = channels
         self.mha = nn.MultiheadAttention(channels, 4, batch_first=True)
         self.ln = nn.LayerNorm([channels])
         self.ff_self = nn.Sequential(
@@ -22,7 +22,7 @@ class SelfAttention(nn.Module):
         )
 
     def forward(self, x):
-        size = x.shape[-1] 
+        size = x.shape[-1]
         x = x.view(-1, self.channels, size).swapaxes(1, 2)
         x_ln = self.ln(x)
         attention_value, _ = self.mha(x_ln, x_ln, x_ln)
@@ -38,10 +38,10 @@ class DoubleConv(nn.Module):
         if not mid_channels:
             mid_channels = out_channels
         self.double_conv = nn.Sequential(
-            nn.Conv1d(in_channels, mid_channels, kernel_size=25, padding=12, padding_mode='reflect'),
-            nn.GroupNorm(1, mid_channels),
-            nn.GELU(),
-            nn.Conv1d(mid_channels, out_channels, kernel_size=25, padding=12, padding_mode='reflect'),
+            # nn.Conv1d(in_channels, mid_channels, kernel_size=25, padding=12, padding_mode='reflect'),
+            # nn.GroupNorm(1, mid_channels),
+            # nn.GELU(),
+            nn.Conv1d(in_channels, out_channels, kernel_size=25, padding=12, padding_mode='reflect'),
             nn.GroupNorm(1, out_channels),
         )
 
@@ -102,7 +102,7 @@ class Up(nn.Module):
 
 
 class UNet(nn.Module):
-    def __init__(self, c_in=7, c_out=7, time_dim=256):
+    def __init__(self, c_in=8, c_out=8, time_dim=256):
         super().__init__()
         self.time_dim = time_dim
         self.inc = DoubleConv(c_in, 32)
@@ -115,10 +115,6 @@ class UNet(nn.Module):
 
         self.bot1 = DoubleConv(256, 256)
         # self.bot2 = DoubleConv(512, 512)
-        #self.bot3 = DoubleConv(256, 256)
-
-        # self.bot1 = DoubleConv(256, 256)
-        # # self.bot2 = DoubleConv(512, )
         # self.bot3 = DoubleConv(256, 256)
 
         self.up1 = Up(384, 128)
@@ -130,16 +126,13 @@ class UNet(nn.Module):
         self.outc = nn.Conv1d(32, c_out, kernel_size=1)
 
     def pos_encoding(self, t, channels):
-        inv_freq = 1.0 / (
-            10000
-            ** (torch.arange(0, channels, 2, device=one_param(self).device).float() / channels)
-        )
+        inv_freq = 1.0 / (10000 ** (torch.arange(0, channels, 2, device=one_param(self).device).float() / channels))
         pos_enc_a = torch.sin(t.repeat(1, channels // 2) * inv_freq)
         pos_enc_b = torch.cos(t.repeat(1, channels // 2) * inv_freq)
         pos_enc = torch.cat([pos_enc_a, pos_enc_b], dim=-1)
         return pos_enc
 
-    def unet_forward(self, x, t):
+    def unet_forwad(self, x, t):
         x1 = self.inc(x)
         x2 = self.down1(x1, t)
         # x2 = self.sa1(x2)
@@ -159,9 +152,26 @@ class UNet(nn.Module):
         x = self.up3(x, x1, t)
         # x = self.sa6(x)
         output = self.outc(x)
-        return torch.tanh(output)
-    
+        return output
+
     def forward(self, x, t):
         t = t.unsqueeze(-1)
         t = self.pos_encoding(t, self.time_dim)
-        return self.unet_forward(x, t)
+        return self.unet_forwad(x, t)
+
+
+class UNet_conditional(UNet):
+    def __init__(self, c_in=8, c_out=8, time_dim=256, num_classes=None):
+        super().__init__(c_in, c_out, time_dim)
+        if num_classes is not None:
+            self.label_emb = nn.Embedding(num_classes, time_dim)
+
+    def forward(self, x, t, y=None):
+        y = torch.trunc(torch.clamp((y - 394) / 10, 0, 129)).long()
+        t = t.unsqueeze(-1)
+        t = self.pos_encoding(t, self.time_dim)
+
+        if y is not None:
+            t += self.label_emb(y)
+
+        return self.unet_forwad(x, t)
