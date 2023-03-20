@@ -1,16 +1,15 @@
 from diffusion_network import UNet_conditional
+from diffusers import DDPMScheduler
 from learning import Diffusion
 import configuration as conf
+from tqdm.auto import tqdm
 import logging
 import helpers
 import wandb
 import torch
 import yaml
-from diffusers import DDPMScheduler
-from tqdm.auto import tqdm
 
 logging.basicConfig(format="%(asctime)s - %(levelname)s: %(message)s", level=logging.INFO, datefmt="%I:%M:%S")
-
 noise_scheduler = DDPMScheduler(num_train_timesteps=300, beta_schedule='squaredcos_cap_v2')
 
 # Init WANDB if needed
@@ -27,9 +26,11 @@ def training_loop():
     # Model and learning method
     model = UNet_conditional(num_classes=130).to(conf.DEVICE)
     diffusion = Diffusion(device=conf.DEVICE)
+
     _, test_dataloader = helpers.get_dataloader(target='test', batch_size=1, shuffle=False)
     lI_VIII, label = next(iter(test_dataloader))
     print(f'rr test: {label}')
+
     # Error function and optimizer
     mse = torch.nn.MSELoss()
     lr = wandb.config.learning_rate if conf.USE_WEIGHTS_AND_BIASES else conf.HYPER_PARAMETERS['learning_rate']
@@ -59,8 +60,10 @@ def training_loop():
             
             leadsI_VIII = leadsI_VIII.to(device=conf.DEVICE)
             noise = torch.randn_like(leadsI_VIII)
+
             #t = diffusion.sample_timesteps(leadsI_VIII.shape[0]).to(device)
             #x_t, noise = diffusion.noise_images(leadsI_VIII, t)
+
             timesteps = torch.randint(0, 299, (leadsI_VIII.shape[0],)).long().to(device=conf.DEVICE)
             noisy_x = noise_scheduler.add_noise(leadsI_VIII, noise, timesteps)
             predicted_noise = model(noisy_x, timesteps, rr)
