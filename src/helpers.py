@@ -10,9 +10,13 @@ import wandb
 import torch
 
 
-def init_wandb(api_key, project: str, config: dict) -> wandb:
-    wandb.login(key=api_key)
-    wandb.init(project=project, entity=conf.WANDB_ENTITY, config=config)
+def init_wandb() -> wandb:
+    wandb.login(key=conf.WANDB_KEY)
+    wandb.init(
+        project=conf.WANDB_PROJECT,
+        entity=conf.WANDB_ENTITY,
+        config=conf.HYPER_PARAMETERS
+    )
     return wandb
 
 
@@ -52,10 +56,10 @@ def create_and_save_plot(generated_leads_two_eight, filename, file_extension='.p
 
 def get_dataloader(
         target="train",
-        batch_size=conf.TRAIN_CONFIGURATION['BATCH_SIZE'],
+        batch_size=conf.HYPER_PARAMETERS['batch_size'],
         shuffle=True
 ) -> Tuple[TensorDataset, torch.utils.data.DataLoader]:
-    dataset = PTB_Dataset(data_dirs=conf.TRAIN_CONFIGURATION['DATASET_OPTION'], target=target)
+    dataset = PTB_Dataset(data_dirs=conf.DATASET_PATH, target=target)
     dataloader = torch.utils.data.DataLoader(
         dataset,
         batch_size=min(batch_size, len(dataset)),

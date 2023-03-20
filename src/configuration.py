@@ -7,18 +7,19 @@ load_dotenv()
 
 # General
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-PLOTS_FOLDER = "../data/plots"
-ACTION = 'train'
+DATASET_PATH = os.path.abspath("../PTB-dataset")
+PLOTS_FOLDER = os.path.abspath("../data/plots")
+ACTION = "tune"  # Options: ("train", "tune")
 
 # Weights and Biases
 WANDB_KEY = os.getenv("WANDB_KEY")
 WANDB_ENTITY = os.getenv("WANDB_ENTITY")
+WANDB_PROJECT = os.getenv("WANDB_PROJECT")
 USE_WEIGHTS_AND_BIASES = os.getenv("USE_WEIGHTS_AND_BIASES").lower() in ('true', '1')
 
 # Train
-TRAIN_CONFIGURATION = {
-    'DATASET_OPTION': os.path.abspath("../PTB-dataset"),
-    'LEARNING_RATE': 0.0003,
-    'BATCH_SIZE': 32,
-    'EPOCHS': 301,
+HYPER_PARAMETERS = {
+    'learning_rate': 0.0003,
+    'batch_size': 32,
+    'epochs': 301,
 }
