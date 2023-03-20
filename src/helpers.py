@@ -35,21 +35,23 @@ def fix_seed():
     torch.backends.cudnn.benchmark = False
 
 
-def create_and_save_plot(generated_leads_two_eight, filename, file_extension='.png'):
-    line_width = 0.3
+def create_and_save_plot(leadsI_VIII, generated_leads_I_VIII, filename, file_extension='.png'):
+    LINE_WIDTH = 0.3
     fig, axs = plt.subplots(4, 2, figsize=(18, 12))
 
     for i in range(4):
         for j in range(2):
             axs[i, j].yaxis.set_major_locator(MultipleLocator(0.5))
             axs[i, j].yaxis.set_minor_locator(AutoMinorLocator(4))
-            axs[i, j].grid(which='major', color='#CCCCCC', linestyle='--', linewidth=line_width)
-            axs[i, j].grid(which='minor', color='#CCCCCC', linestyle=':', linewidth=line_width / 2)
+            axs[i, j].grid(which='major', color='#CCCCCC', linestyle='--', linewidth=LINE_WIDTH)
+            axs[i, j].grid(which='minor', color='#CCCCCC', linestyle=':', linewidth=LINE_WIDTH / 2)
 
-    for i in range(3):
-        axs[i + 1, 0].plot(generated_leads_two_eight[i], linewidth=line_width)
     for i in range(4):
-        axs[i, 1].plot(generated_leads_two_eight[i + 3], linewidth=line_width)
+        axs[i, 0].plot(leadsI_VIII[i], linewidth=LINE_WIDTH)
+        axs[i, 0].plot(generated_leads_I_VIII[i], linewidth=LINE_WIDTH)
+    for i in range(4):
+        axs[i, 1].plot(leadsI_VIII[i+3], linewidth=LINE_WIDTH)
+        axs[i, 1].plot(generated_leads_I_VIII[i+3], linewidth=LINE_WIDTH)
     fig.savefig(Path(filename + file_extension))
     plt.close(fig)
 

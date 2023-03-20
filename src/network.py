@@ -1,78 +1,178 @@
+#%%
 import torch
-from torch import nn
+import torch.nn as nn
 import torch.nn.functional as F
 
 
-class Upscale1dLayer(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, stride, scale_factor=None, linear_interpolation=True):
-        super(Upscale1dLayer, self).__init__()
-
-        if linear_interpolation:
-            self.upsample_layer = torch.nn.Upsample(scale_factor=scale_factor, mode='linear', align_corners=True)
-        else:
-            self.upsample_layer = torch.nn.Upsample(scale_factor=scale_factor)
-        self.conv1d = torch.nn.Conv1d(in_channels, out_channels, kernel_size, stride, padding = kernel_size // 2, padding_mode='reflect') 
-
-    def forward(self, x):
-        return self.conv1d(self.upsample_layer(x))
+def one_param(m):
+    "get model first parameter"
+    return next(iter(m.parameters()))
 
 
-class Upscale1dLayer_multi_input(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, stride, scale_factor=None, linear_interpolation=True):
-        super(Upscale1dLayer_multi_input, self).__init__()
-
-        if linear_interpolation:
-            self.upsample_layer = torch.nn.Upsample(scale_factor=scale_factor, mode='linear', align_corners=True)
-        else:
-            self.upsample_layer = torch.nn.Upsample(scale_factor=scale_factor)
-        self.conv1d = torch.nn.Conv1d(in_channels, out_channels, kernel_size, stride, padding = kernel_size // 2, padding_mode='reflect')
-
-    def forward(self, x1, x2):
-        x = torch.cat((x1, x2), dim=1)
-        return self.conv1d(self.upsample_layer(x))
-   
-
-class Pulse2pulseGenerator(nn.Module):
-    def __init__(self, model_size=16, kernel_size=25, num_input_channels=1, num_output_channels=7):
-        super(Pulse2pulseGenerator, self).__init__()
-
-        padding_size = kernel_size // 2
-        
-        self.conv_1 = nn.Conv1d(num_input_channels, model_size, kernel_size, stride=2, padding = padding_size, padding_mode='reflect')
-        self.conv_2 = nn.Conv1d(model_size, model_size * 2, kernel_size, stride=2, padding = padding_size, padding_mode='reflect')
-        self.conv_3 = nn.Conv1d(model_size * 2, model_size * 4, kernel_size, stride=2, padding = padding_size, padding_mode='reflect') 
-        self.conv_4 = nn.Conv1d(model_size * 4, model_size * 8, kernel_size, stride=5, padding = padding_size, padding_mode='reflect')
-        self.conv_5 = nn.Conv1d(model_size * 8, model_size * 16, kernel_size, stride=5, padding = padding_size, padding_mode='reflect')
-        self.conv_6 = nn.Conv1d(model_size * 16, model_size * 32, kernel_size, stride=5, padding = padding_size, padding_mode='reflect')
-        
-        self.dropout1 = nn.Dropout(0.1)
-        self.deconv_1 = Upscale1dLayer(32 * model_size, 16 * model_size, kernel_size, stride=1, scale_factor=5)
-        self.dropout2 = nn.Dropout(0.1)
-        self.deconv_2 = Upscale1dLayer_multi_input(32 * model_size, 8 * model_size, kernel_size, stride=1, scale_factor=5)
-        self.dropout3 = nn.Dropout(0.1)
-        self.deconv_3 = Upscale1dLayer_multi_input(16 * model_size, 4 * model_size, kernel_size, stride=1, scale_factor=5)
-        self.deconv_4 = Upscale1dLayer_multi_input(8 * model_size, 2 * model_size, kernel_size, stride=1, scale_factor=2)
-        self.deconv_5 = Upscale1dLayer_multi_input(4 * model_size, model_size, kernel_size, stride=1, scale_factor=2)
-        self.deconv_6 = Upscale1dLayer(model_size, num_output_channels, kernel_size, stride=1, scale_factor=2)
-
-        for m in self.modules():
-            if isinstance(m, nn.Conv1d) or isinstance(m, nn.ConvTranspose1d) or isinstance(m, nn.Linear):
-                nn.init.kaiming_normal_(m.weight.data)
+class SelfAttention(nn.Module):
+    def __init__(self, channels):
+        super(SelfAttention, self).__init__()
+        self.channels = channels        
+        self.mha = nn.MultiheadAttention(channels, 4, batch_first=True)
+        self.ln = nn.LayerNorm([channels])
+        self.ff_self = nn.Sequential(
+            nn.LayerNorm([channels]),
+            nn.Linear(channels, channels),
+            nn.GELU(),
+            nn.Linear(channels, channels),
+        )
 
     def forward(self, x):
-        conv_1_out = F.leaky_relu(self.conv_1(x))
-        conv_2_out = F.leaky_relu(self.conv_2(conv_1_out))
-        conv_3_out = F.leaky_relu(self.conv_3(conv_2_out))
-        conv_4_out = F.leaky_relu(self.conv_4(conv_3_out))
-        conv_5_out = F.leaky_relu(self.conv_5(conv_4_out))
-        conv_6_out = F.leaky_relu(self.dropout1(self.conv_6(conv_5_out)))
-  
-        deconv_1_out = F.relu(self.dropout2(self.deconv_1(conv_6_out)))
-        deconv_2_out = F.relu(self.dropout3(self.deconv_2(deconv_1_out, conv_5_out)))
-        deconv_3_out = F.relu(self.deconv_3(deconv_2_out, conv_4_out))
-        deconv_4_out = F.relu(self.deconv_4(deconv_3_out, conv_3_out))
-        deconv_5_out = F.relu(self.deconv_5(deconv_4_out, conv_2_out))
-        deconv_6_out = self.deconv_6(deconv_5_out)
+        size = x.shape[-1] 
+        x = x.view(-1, self.channels, size).swapaxes(1, 2)
+        x_ln = self.ln(x)
+        attention_value, _ = self.mha(x_ln, x_ln, x_ln)
+        attention_value = attention_value + x
+        attention_value = self.ff_self(attention_value) + attention_value
+        return attention_value.swapaxes(2, 1).view(-1, self.channels, size)
 
-        output = torch.tanh(deconv_6_out)
+
+class DoubleConv(nn.Module):
+    def __init__(self, in_channels, out_channels, mid_channels=None, residual=False):
+        super().__init__()
+        self.residual = residual
+        if not mid_channels:
+            mid_channels = out_channels
+        self.double_conv = nn.Sequential(
+            # nn.Conv1d(in_channels, mid_channels, kernel_size=25, padding=12, padding_mode='reflect'),
+            # nn.GroupNorm(1, mid_channels),
+            # nn.GELU(),
+            nn.Conv1d(in_channels, out_channels, kernel_size=25, padding=12, padding_mode='reflect'),
+            nn.GroupNorm(1, out_channels),
+        )
+
+    def forward(self, x):
+        if self.residual:
+            return F.gelu(x + self.double_conv(x))
+        else:
+            return self.double_conv(x)
+
+
+class Down(nn.Module):
+    def __init__(self, in_channels, out_channels, emb_dim=256):
+        super().__init__()
+        self.maxpool_conv = nn.Sequential(
+            nn.MaxPool1d(2),
+            DoubleConv(in_channels, in_channels, residual=True),
+            DoubleConv(in_channels, out_channels),
+        )
+
+        self.emb_layer = nn.Sequential(
+            nn.SiLU(),
+            nn.Linear(
+                emb_dim,
+                out_channels
+            ),
+        )
+
+    def forward(self, x, t):
+        x = self.maxpool_conv(x)
+        emb = self.emb_layer(t)[:, :, None].repeat(1, 1, x.shape[-1])
+        return x + emb
+
+
+class Up(nn.Module):
+    def __init__(self, in_channels, out_channels, emb_dim=256):
+        super().__init__()
+
+        self.up = nn.Upsample(scale_factor=2, mode="linear", align_corners=True)
+        self.conv = nn.Sequential(
+            DoubleConv(in_channels, in_channels, residual=True),
+            DoubleConv(in_channels, out_channels, in_channels // 2),
+        )
+
+        self.emb_layer = nn.Sequential(
+            nn.SiLU(),
+            nn.Linear(
+                emb_dim,
+                out_channels
+            ),
+        )
+
+    def forward(self, x, skip_x, t):
+        x = self.up(x)
+        x = torch.cat([skip_x, x], dim=1)
+        x = self.conv(x)
+        emb = self.emb_layer(t)[:, :, None].repeat(1, 1, x.shape[-1])
+        return x + emb
+
+
+class UNet(nn.Module):
+    def __init__(self, c_in=8, c_out=8, time_dim=256):
+        super().__init__()
+        self.time_dim = time_dim
+        self.inc = DoubleConv(c_in, 32)
+        self.down1 = Down(32, 64)
+        self.sa1 = SelfAttention(64)
+        self.down2 = Down(64, 128)
+        self.sa2 = SelfAttention(128)
+        self.down3 = Down(128, 256)
+        self.sa3 = SelfAttention(256)
+
+        self.bot1 = DoubleConv(256, 256)
+        # self.bot2 = DoubleConv(512, 512)
+        #self.bot3 = DoubleConv(256, 256)
+
+        self.up1 = Up(384, 128)
+        self.sa4 = SelfAttention(128)
+        self.up2 = Up(192, 64)
+        self.sa5 = SelfAttention(64)
+        self.up3 = Up(96, 32)
+        self.sa6 = SelfAttention(32)
+        self.outc = nn.Conv1d(32, c_out, kernel_size=1)
+
+    def pos_encoding(self, t, channels):
+        inv_freq = 1.0 / (10000 ** (torch.arange(0, channels, 2, device=one_param(self).device).float() / channels))
+        pos_enc_a = torch.sin(t.repeat(1, channels // 2) * inv_freq)
+        pos_enc_b = torch.cos(t.repeat(1, channels // 2) * inv_freq)
+        pos_enc = torch.cat([pos_enc_a, pos_enc_b], dim=-1)
+        return pos_enc
+
+    def unet_forwad(self, x, t):
+        x1 = self.inc(x)
+        x2 = self.down1(x1, t)
+        # x2 = self.sa1(x2)
+        x3 = self.down2(x2, t)
+        # x3 = self.sa2(x3)
+        x4 = self.down3(x3, t)
+        # x4 = self.sa3(x4)
+
+        x4 = self.bot1(x4)
+        # x4 = self.bot2(x4)
+        # x4 = self.bot3(x4)
+
+        x = self.up1(x4, x3, t)
+        # x = self.sa4(x)
+        x = self.up2(x, x2, t)
+        # x = self.sa5(x)
+        x = self.up3(x, x1, t)
+        # x = self.sa6(x)
+        output = self.outc(x)
         return output
+    
+    def forward(self, x, t):
+        t = t.unsqueeze(-1)
+        t = self.pos_encoding(t, self.time_dim)
+        return self.unet_forwad(x, t)
+
+
+class UNet_conditional(UNet):
+    def __init__(self, c_in=8, c_out=8, time_dim=256, num_classes=None):
+        super().__init__(c_in, c_out, time_dim)
+        if num_classes is not None:
+            self.label_emb = nn.Embedding(num_classes, time_dim)
+
+    def forward(self, x, t, y=None):
+        y = torch.trunc(torch.clamp((y - 394) / 10, 0, 129)).long()
+        t = t.unsqueeze(-1)
+        t = self.pos_encoding(t, self.time_dim)
+
+        if y is not None:
+            t += self.label_emb(y)
+
+        return self.unet_forwad(x, t)
