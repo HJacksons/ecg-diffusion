@@ -1,6 +1,7 @@
 from diffusion_network import UNet_conditional
 from diffusers import DDPMScheduler
 from learning import Diffusion
+from steven_network import KanResWide_X
 import configuration as conf
 from tqdm.auto import tqdm
 import logging
