@@ -182,7 +182,7 @@ class PTB_Dataset(TensorDataset):
 # transformer = Synthetic_Dataset(dataset_folder)
 # transformer.convert()
 
-# dataset_folder = 'PTB'
+# dataset_folder = 'PTB-dataset'
 # transformer = PTB_Dataset(dataset_folder)
 # transformer.convert()
 
