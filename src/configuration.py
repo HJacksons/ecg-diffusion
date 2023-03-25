@@ -13,7 +13,7 @@ MODELS_FOLDER = os.path.abspath("../data/trained_models")
 ACTION = "train"  # Options: ("train", "tune")
 
 # Validation
-TRAINED_MODEL_PATH = os.path.abspath("rr_prediction_model.pt")
+TRAINED_MODEL_PATH = os.path.abspath("../rr_prediction_model.pt")
 VALIDATE_DIFFUSION = os.getenv("VALIDATE_DIFFUSION").lower() in ('true', '1')
 VALIDATION_SAMPLES = 100
 
