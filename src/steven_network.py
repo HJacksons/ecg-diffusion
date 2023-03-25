@@ -2,7 +2,7 @@ import torch.nn as nn
 
 
 class KanResWide_X(nn.Module):
-    def __init__(self, input, output_size):
+    def __init__(self, input=8, output_size=1):
         super().__init__()
         self.input = input
         self.outpu_size = output_size
