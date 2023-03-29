@@ -1,7 +1,7 @@
 from matplotlib.ticker import AutoMinorLocator, MultipleLocator
 from datasets import PTB_Dataset, TensorDataset
 from matplotlib import pyplot as plt
-from steven_network import KanResWide_X
+from src.networks.Steven import KanResWide_X
 import configuration as conf
 from pathlib import Path
 from typing import Tuple
