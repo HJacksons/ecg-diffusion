@@ -74,7 +74,7 @@ def get_dataloader(
 
 
 steven_model = KanResWide_X().to(conf.DEVICE)
-steven_model.load_state_dict(torch.load(conf.TRAINED_MODEL_PATH))
+steven_model.load_state_dict(torch.load(conf.TRAINED_MODEL_PATH, map_location=conf.DEVICE))
 mse = torch.nn.MSELoss()
 
 def validate_with_steven_model(ecg, rr):
