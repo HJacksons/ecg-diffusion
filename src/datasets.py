@@ -13,7 +13,7 @@ class TensorDataset(Dataset):
     DATAFILE_EXTENSION = ".pt"
 
     def __init__(self, data_dirs: Union[str, list[str]], target: Literal["train", "test", "validation"] = "train"):
-        print(f"Loading dataset from {data_dirs}")
+        print(f"Loading {target} dataset from {data_dirs}")
         self.target = target
         if isinstance(data_dirs, str):
             data_dirs = [data_dirs]

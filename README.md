@@ -11,4 +11,4 @@ A latent diffusion model for generating conditioned ECG signals
 
 Frencis Balla - s371513@oslomet.no\
 Jackson Herbert Sinamenye - s371140@oslomet.no\
-Oriana Presacan - s...@oslomet.no
+Oriana Presacan - s372073@oslomet.no
