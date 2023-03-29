@@ -1,6 +1,7 @@
 from diffusion_network import UNet_conditional
 from diffusers import DDPMScheduler
 from learning import Diffusion
+from steven_network import KanResWide_X
 import configuration as conf
 from tqdm.auto import tqdm
 import logging
@@ -11,6 +12,7 @@ import yaml
 
 logging.basicConfig(format="%(asctime)s - %(levelname)s: %(message)s", level=logging.INFO, datefmt="%I:%M:%S")
 noise_scheduler = DDPMScheduler(num_train_timesteps=300, beta_schedule='squaredcos_cap_v2')
+VALIDATION_NOISE = torch.randn(1, 8, 5000).to(device=conf.DEVICE)
 
 # Init WANDB if needed
 if conf.USE_WEIGHTS_AND_BIASES:
@@ -18,6 +20,7 @@ if conf.USE_WEIGHTS_AND_BIASES:
 
 # Prep for training or tuning
 helpers.create_folder_if_not_exists(conf.PLOTS_FOLDER)
+helpers.create_folder_if_not_exists(conf.MODELS_FOLDER)
 if conf.ACTION in ("train", "tune"):
     helpers.fix_seed()
 
@@ -26,9 +29,6 @@ def training_loop():
     # Model and learning method
     model = UNet_conditional(num_classes=130).to(conf.DEVICE)
     diffusion = Diffusion(device=conf.DEVICE)
-
-    _, test_dataloader = helpers.get_dataloader(target='test', batch_size=1, shuffle=False)
-    lI_VIII, label = next(iter(test_dataloader))
 
     # Error function and optimizer
     mse = torch.nn.MSELoss()
@@ -45,7 +45,6 @@ def training_loop():
     #     shuffle=False
     # )
 
-    train_loss_plot = []
     model.train()
 
     # Training loop
@@ -74,32 +73,38 @@ def training_loop():
             train_loss_average += loss.cpu()
         train_loss_average /= len(train_dataloader)
 
-        # Prepare random x to start from, plus some desired labels y
-        x = torch.randn(1, 8, 5000).to(device=conf.DEVICE)
-        y = label.squeeze().to(device=conf.DEVICE)
+        # Validation with steven model
+        validation_loss_average = 0
+        # Generate 100 ECGs from noise
+        for validation_index in range(conf.VALIDATION_SAMPLES):
+            # always use the same noise (not exactly sure if that's right)
+            x = VALIDATION_NOISE
+            # choose a random RR value
+            y = torch.randint(400, 1500, size=(1,)).to(device=conf.DEVICE)
 
-        # Sampling loop
-        for t in tqdm(noise_scheduler.timesteps, desc='Sampling', leave=False, position=2):
-            # Get model pred
-            with torch.no_grad():
-                residual = model(x, t.to(device=conf.DEVICE), y)  # Again, note that we pass in our labels y
-            # Update sample with step
-            x = noise_scheduler.step(residual, t, x).prev_sample
-
-        #sampled_ecg = diffusion.sample(model, n=1)
-
-        helpers.create_and_save_plot(lI_VIII[0].cpu().detach().numpy(), x[0].cpu().detach().numpy(), filename=f'{conf.PLOTS_FOLDER}/ecg{epoch}')
+            # Sampling loop
+            for t in tqdm(noise_scheduler.timesteps, desc='Sampling', leave=False, position=2):
+                with torch.no_grad():
+                    residual = model(x, t.to(device=conf.DEVICE), y)
+                # Update sample with step
+                x = noise_scheduler.step(residual, t, x).prev_sample
+            #sampled_ecg = diffusion.sample(model, n=1)
+            validation_loss_average += helpers.validate_with_steven_model(x, y)
+        validation_loss_average /= conf.VALIDATION_SAMPLES
+        # helpers.create_and_save_plot(x[0].cpu().detach().numpy(), filename=f'{PLOTS_FOLDER}/ecg{epoch}')
 
         if conf.USE_WEIGHTS_AND_BIASES:
             plot_filename = f"{conf.PLOTS_FOLDER}/ecg{epoch}"
-            wandb.log({
-                "MSE": train_loss_average,
-                "ECG": wandb.Image(plot_filename + ".png")
-            })
-        else:
-            train_loss_plot.append(train_loss_average)
-            print(f'Finished epoch {epoch}. Average loss for this epoch: {train_loss_average:05f}')
+            wandb.log({"MSE": train_loss_average,
+                       #"ECG": wandb.Image(plot_filename + ".png"),
+                       "Validation MSE": validation_loss_average})
+        print(f'Epoch: {epoch}. Average train loss: {train_loss_average:04f}. Average validation loss: {validation_loss_average:04f}')
+        print("--------------------------------------------------------------------------------------------------------")
 
+        # save model every 10 epochs
+        if epoch % 10 == 0:
+            model_filename = f"{conf.MODELS_FOLDER}/model_epoch{epoch}.pt"
+            torch.save(model.state_dict(), model_filename)
 
 # Run action
 if conf.ACTION == "train":
