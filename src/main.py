@@ -1,7 +1,6 @@
 from diffusion_network import UNet_conditional
 from diffusers import DDPMScheduler
 from learning import Diffusion
-from steven_network import KanResWide_X
 import configuration as conf
 from tqdm.auto import tqdm
 import logging
@@ -39,12 +38,6 @@ def training_loop():
     bs = wandb.config.batch_size if conf.USE_WEIGHTS_AND_BIASES else conf.HYPER_PARAMETERS['batch_size']
     train_dataset, train_dataloader = helpers.get_dataloader(target='train', batch_size=bs)
 
-    # validation_dataset, validation_dataloader = helpers.get_dataloader(
-    #     target='validation',
-    #     batch_size=1,
-    #     shuffle=False
-    # )
-
     model.train()
 
     # Training loop
@@ -54,12 +47,8 @@ def training_loop():
 
         for (leadsI_VIII, rr) in tqdm(train_dataloader, desc='Batch', leave=False, position=1):
             rr = rr.squeeze().to(device=conf.DEVICE)
-            
             leadsI_VIII = leadsI_VIII.to(device=conf.DEVICE)
             noise = torch.randn_like(leadsI_VIII)
-
-            #t = diffusion.sample_timesteps(leadsI_VIII.shape[0]).to(device)
-            #x_t, noise = diffusion.noise_images(leadsI_VIII, t)
 
             timesteps = torch.randint(0, 299, (leadsI_VIII.shape[0],)).long().to(device=conf.DEVICE)
             noisy_x = noise_scheduler.add_noise(leadsI_VIII, noise, timesteps)
@@ -88,16 +77,18 @@ def training_loop():
                     residual = model(x, t.to(device=conf.DEVICE), y)
                 # Update sample with step
                 x = noise_scheduler.step(residual, t, x).prev_sample
-            #sampled_ecg = diffusion.sample(model, n=1)
+            # sampled_ecg = diffusion.sample(model, n=1)
             validation_loss_average += helpers.validate_with_steven_model(x, y)
         validation_loss_average /= conf.VALIDATION_SAMPLES
         # helpers.create_and_save_plot(x[0].cpu().detach().numpy(), filename=f'{PLOTS_FOLDER}/ecg{epoch}')
 
         if conf.USE_WEIGHTS_AND_BIASES:
             plot_filename = f"{conf.PLOTS_FOLDER}/ecg{epoch}"
-            wandb.log({"MSE": train_loss_average,
-                       #"ECG": wandb.Image(plot_filename + ".png"),
-                       "Validation MSE": validation_loss_average})
+            wandb.log({
+                "MSE": train_loss_average,
+                "ECG": wandb.Image(plot_filename + ".png"),
+                "V-MSE": validation_loss_average
+            })
         print(f'Epoch: {epoch}. Average train loss: {train_loss_average:04f}. Average validation loss: {validation_loss_average:04f}')
         print("--------------------------------------------------------------------------------------------------------")
 
@@ -105,6 +96,7 @@ def training_loop():
         if epoch % 10 == 0:
             model_filename = f"{conf.MODELS_FOLDER}/model_epoch{epoch}.pt"
             torch.save(model.state_dict(), model_filename)
+
 
 # Run action
 if conf.ACTION == "train":
