@@ -1,4 +1,4 @@
-from diffusion_network import UNet_conditional
+from src.networks.UNet import UNet_conditional
 from diffusers import DDPMScheduler
 from learning import Diffusion
 import configuration as conf

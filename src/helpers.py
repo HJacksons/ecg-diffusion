@@ -1,7 +1,7 @@
 from matplotlib.ticker import AutoMinorLocator, MultipleLocator
 from datasets import PTB_Dataset, TensorDataset
 from matplotlib import pyplot as plt
-from steven_network import KanResWide_X
+from src.networks.Steven import KanResWide_X
 import configuration as conf
 from pathlib import Path
 from typing import Tuple
@@ -53,7 +53,7 @@ def create_and_save_plot(generated_leads_I_VIII, filename, file_extension='.png'
         axs[i, 0].plot(generated_leads_I_VIII[i], linewidth=LINE_WIDTH)
     for i in range(4):
         # axs[i, 1].plot(leadsI_VIII[i+3], linewidth=LINE_WIDTH)
-        axs[i, 1].plot(generated_leads_I_VIII[i+3], linewidth=LINE_WIDTH)
+        axs[i, 1].plot(generated_leads_I_VIII[i + 3], linewidth=LINE_WIDTH)
     fig.savefig(Path(filename + file_extension))
     plt.close(fig)
 
@@ -77,10 +77,38 @@ steven_model = KanResWide_X().to(conf.DEVICE)
 steven_model.load_state_dict(torch.load(conf.TRAINED_MODEL_PATH, map_location=conf.DEVICE))
 mse = torch.nn.MSELoss()
 
+
 def validate_with_steven_model(ecg, rr):
     steven_model.eval()
     with torch.inference_mode():
         predicted_rr = steven_model(ecg)
         loss = mse(predicted_rr, rr)
-        print(f'Predicted RR: {predicted_rr}. True RR: {rr}') 
+        print(f'Predicted RR: {predicted_rr}. True RR: {rr}')
     return loss
+
+
+def calc_diffusion_step_embedding(diffusion_steps, diffusion_step_embed_dim_in):
+    """
+    Embed a diffusion step $t$ into a higher dimensional space
+    E.g. the embedding vector in the 128-dimensional space is
+    [sin(t * 10^(0*4/63)), ... , sin(t * 10^(63*4/63)), cos(t * 10^(0*4/63)), ... , cos(t * 10^(63*4/63))]
+    Parameters:
+    diffusion_steps (torch.long tensor, shape=(batchsize, 1)):
+                                diffusion steps for batch data
+    diffusion_step_embed_dim_in (int, default=128):
+                                dimensionality of the embedding space for discrete diffusion steps
+
+    Returns:
+    the embedding vectors (torch.tensor, shape=(batchsize, diffusion_step_embed_dim_in)):
+    """
+
+    assert diffusion_step_embed_dim_in % 2 == 0
+
+    half_dim = diffusion_step_embed_dim_in // 2
+    _embed = np.log(10000) / (half_dim - 1)
+    _embed = torch.exp(torch.arange(half_dim) * -_embed).cuda()
+    _embed = diffusion_steps * _embed
+    diffusion_step_embed = torch.cat((torch.sin(_embed),
+                                      torch.cos(_embed)), 1)
+
+    return diffusion_step_embed
