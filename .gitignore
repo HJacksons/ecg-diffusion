@@ -2,6 +2,7 @@
 /venv
 /PTB-dataset
 /src/__pycache__
+/src/networks/__pycache__
 /src/wandb
 /src/plots
 .DS_Store
