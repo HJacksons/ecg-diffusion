@@ -1,6 +1,5 @@
 from src.networks.UNet import UNet_conditional
 from diffusers import DDPMScheduler
-from learning import Diffusion
 import configuration as conf
 from tqdm.auto import tqdm
 import logging
@@ -27,7 +26,6 @@ if conf.ACTION in ("train", "tune"):
 def training_loop():
     # Model and learning method
     model = UNet_conditional(num_classes=130).to(conf.DEVICE)
-    diffusion = Diffusion(device=conf.DEVICE)
 
     # Error function and optimizer
     mse = torch.nn.MSELoss()

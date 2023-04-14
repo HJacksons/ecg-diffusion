@@ -11,6 +11,10 @@ DATASET_PATH = os.path.abspath("../PTB-dataset")
 PLOTS_FOLDER = os.path.abspath("../data/plots")
 MODELS_FOLDER = os.path.abspath("../models/trained")
 ACTION = "train"  # Options: ("train", "tune")
+EPOCHS = 1000
+
+# Network
+MODEL = "diffwave"  # Options: ("diffwave", "unet")
 
 # Validation
 TRAINED_MODEL_PATH = os.path.abspath("../models/external/rr_prediction_model.pt")
@@ -25,7 +29,8 @@ USE_WEIGHTS_AND_BIASES = os.getenv("USE_WEIGHTS_AND_BIASES").lower() in ('true',
 
 # Train
 HYPER_PARAMETERS = {
-    'learning_rate': 0.0003,
-    'batch_size': 32,
-    'epochs': 301,
+    'learning_rate': 0.0002,
+    'batch_size': 16,
+    'residual_layers': 36, 
+    'residual_channels': 256, 
 }
