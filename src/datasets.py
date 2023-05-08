@@ -169,22 +169,3 @@ class PTB_Dataset(TensorDataset):
                     temp_tensor_out = torch.tensor(temp_df.iloc[:, [13]].values)
                     temp_tensor_pair = (temp_tensor_in, temp_tensor_out[0].long())
                     torch.save(temp_tensor_pair, f'{data_dir}/{folder}/{str(ecg_index).zfill(5)}.pt')
-
-
-# import zipfile
-# with zipfile.ZipFile('PTB.zip', 'r') as zip_ref:
-#     zip_ref.extractall()
-
-
-# dataset_folder = 'synthetic'
-# transformer = Synthetic_Dataset(dataset_folder)
-# transformer.convert()
-
-# dataset_folder = 'PTB-dataset'
-# transformer = PTB_Dataset(dataset_folder)
-# transformer.convert()
-
-# dataset_folder = 'PTB_pathologic'
-# transformer = PTB_Dataset(dataset_folder)
-# transformer.convert()
-# transformer.max_value()

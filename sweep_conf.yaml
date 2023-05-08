@@ -1,14 +1,17 @@
 name: "Hyperparameter Tuning Sweep"
 method: bayes
 metric:
-  name: V-MSE
+  name: MSE
   goal: minimize
 parameters:
   learning_rate:
     min: 0.00003
     max: 0.003
-  epochs:
-    min: 100
-    max: 1000
+  residual_layers:
+    min: 18
+    max: 72
+  residual_channels:
+    min: 128
+    max: 512
   batch_size:
     values: [16, 32, 64, 128]

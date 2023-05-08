@@ -1,6 +1,6 @@
-import os
-import torch
 from dotenv import load_dotenv
+import torch
+import os
 
 # Load variables from .env file
 load_dotenv()
