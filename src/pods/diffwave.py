@@ -1,11 +1,12 @@
 from src.networks.DiffWave import DiffWave
+from src.contracts.pod import PodContract
 import src.configuration as conf
 import torch.nn as nn
 import numpy as np
 import torch
 
 
-class DiffWavePod:
+class DiffWavePod(PodContract):
     def __init__(self, lr):
         self.model = DiffWave(
             conf.HYPER_PARAMETERS['residual_layers'],

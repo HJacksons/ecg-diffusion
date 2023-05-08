@@ -17,5 +17,7 @@ class ModelPod:
         elif conf.MODEL == "diffwave":
             self.pod = DiffWavePod(lr=self.lr)
 
+        # Add any new network pods here
+
     def get_batch_size(self):
         return self.batch_size

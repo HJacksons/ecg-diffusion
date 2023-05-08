@@ -1,11 +1,12 @@
 from src.networks.UNet import UNet_conditional
+from src.contracts.pod import PodContract
 from diffusers import DDPMScheduler
 import src.configuration as conf
 import torch.nn as nn
 import torch
 
 
-class UNetPod:
+class UNetPod(PodContract):
     def __init__(self, lr):
         self.model = UNet_conditional(num_classes=130).to(conf.DEVICE)
         self.loss_fn = nn.MSELoss()
