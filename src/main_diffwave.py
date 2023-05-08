@@ -1,12 +1,12 @@
 from src.networks.DiffWave import DiffWave
-import torch.nn as nn
 import configuration as conf
 from tqdm.auto import tqdm
+import torch.nn as nn
+import numpy as np
 import helpers
 import wandb
 import torch
 import yaml
-import numpy as np
 
 # Init WANDB if needed
 if conf.USE_WEIGHTS_AND_BIASES:
@@ -24,12 +24,14 @@ def training_loop():
     inference_noise_schedule = [0.0001, 0.001, 0.01, 0.05, 0.2, 0.5]
 
     # Model and learning method
-    model = DiffWave(conf.HYPER_PARAMETERS['residual_layers'],
-                     conf.HYPER_PARAMETERS['residual_channels'],
-                     dilation_cycle_length=10,
-                     n_mels=80,  # just for conditional
-                     noise_schedule=np.linspace(1e-4, 0.05, 50).tolist(),
-                     unconditional=True).to(conf.DEVICE)
+    model = DiffWave(
+        conf.HYPER_PARAMETERS['residual_layers'],
+        conf.HYPER_PARAMETERS['residual_channels'],
+        dilation_cycle_length=10,
+        n_mels=80,  # just for conditional
+        noise_schedule=np.linspace(1e-4, 0.05, 50).tolist(),
+        unconditional=True
+    ).to(conf.DEVICE)
 
     # Error function and optimizer
     loss_fn = nn.L1Loss()
@@ -123,7 +125,6 @@ def training_loop():
                 "ECG": wandb.Image(plot_filename + ".png")
             })
         print(f'Epoch: {epoch}. Average train loss: {train_loss_average:04f}.')
-        print("-------------------------------------------------------------------------------------------------------")
 
         # save model every 10 epochs
         if epoch % 10 == 0:

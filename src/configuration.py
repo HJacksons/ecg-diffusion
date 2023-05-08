@@ -29,7 +29,6 @@ USE_WEIGHTS_AND_BIASES = os.getenv("USE_WEIGHTS_AND_BIASES").lower() in ('true',
 
 # Train
 HYPER_PARAMETERS = {
-    'epochs': 1000,
     'learning_rate': 0.0002,
     'batch_size': 16,
     'residual_layers': 36, 

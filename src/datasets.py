@@ -7,8 +7,6 @@ import glob
 import os
 
 
-# https://colab.research.google.com/drive/1KN1BTl1Thhhy87YjV04fYP5L_VlUAZ2F?usp=sharing
-
 class TensorDataset(Dataset):
     DATAFILE_EXTENSION = ".pt"
 
