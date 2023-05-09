@@ -14,7 +14,7 @@ class UNetPod(PodContract):
         self.noise_scheduler = DDPMScheduler(num_train_timesteps=300, beta_schedule='squaredcos_cap_v2')
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=lr, betas=(0.5, 0.999))
 
-    def batch_processing(self, leadsI_VIII, rr):
+    def batch_processing(self, batch, leadsI_VIII, feature):
         self.optimizer.zero_grad()
 
         noise = torch.randn_like(leadsI_VIII)

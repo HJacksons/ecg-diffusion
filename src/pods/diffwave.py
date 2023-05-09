@@ -14,7 +14,7 @@ class DiffWavePod(PodContract):
             conf.HYPER_PARAMETERS['residual_channels'],
             dilation_cycle_length=10,
             n_mels=80,  # just for conditional
-            noise_schedule=np.linspace(1e-4, 0.05, 50).tolist(),
+            noise_schedule=np.linspace(1e-4, 0.05, conf.HYPER_PARAMETERS['time_steps']).tolist(),
             unconditional=True
         ).to(conf.DEVICE)
         self.loss_fn = nn.L1Loss()
@@ -29,7 +29,7 @@ class DiffWavePod(PodContract):
         noise_level = np.cumprod(1 - beta)
         self.noise_level = torch.tensor(noise_level.astype(np.float32))
 
-    def batch_processing(self, leadsI_VIII, rr):
+    def batch_processing(self, batch, leadsI_VIII, feature):
         self.optimizer.zero_grad()
 
         noise_level = self.noise_level.to(device=conf.DEVICE)

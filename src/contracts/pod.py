@@ -7,7 +7,7 @@ class PodContract(ABC):
         pass
 
     @abstractmethod
-    def batch_processing(self, leadsI_VIII, rr):
+    def batch_processing(self, batch, leadsI_VIII, feature):
         pass
 
     @abstractmethod
