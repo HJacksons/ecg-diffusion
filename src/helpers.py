@@ -1,15 +1,14 @@
 from matplotlib.ticker import AutoMinorLocator, MultipleLocator
 from datasets import PTB_Dataset, TensorDataset
 from matplotlib import pyplot as plt
-from src.networks.Steven import KanResWide_X
 import configuration as conf
+from torch import autograd
 from pathlib import Path
 from typing import Tuple
 import numpy as np
 import random
 import wandb
 import torch
-from torch import autograd
 
 def init_wandb() -> wandb:
     wandb.login(key=conf.WANDB_KEY)
