@@ -1,7 +1,0 @@
-stages:
-  prepare_data:
-    cmd: python src/data_prepare.py
-    deps:
-      - data/PTB.zip
-    outs:
-      - PTB-dataset
