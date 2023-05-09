@@ -2,10 +2,14 @@
 /venv
 /PTB-dataset
 /src/__pycache__
+/src/contracts/__pycache__
+/src/data_preprocessing/__pycache__
 /src/networks/__pycache__
+/src/pods/__pycache__
 /src/wandb
 /src/plots
 /models
 /data/generated
+/data/plots
 .DS_Store
 .env
