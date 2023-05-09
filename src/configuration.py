@@ -14,15 +14,10 @@ ACTION = "train"  # Options: ("train", "tune")
 EPOCHS = 1000
 
 # Network
-MODEL = "steven"  # Options: ("diffwave", "unet", "steven", "pulse2pulse")
+MODEL = "pulse2pulse"  # Options: ("diffwave", "unet", "steven", "pulse2pulse")
 
 # Steven
 FEATURE = 'rr' # rr | qrs | pr | qt | VentricularRate | R_Peak_i | R_Peak_ii | R_Peak_v1 | R_Peak_v2 | R_Peak_v3 | R_Peak_v4 | R_Peak_v5 | R_Peak_v6
-
-# Validation
-TRAINED_MODEL_PATH = os.path.abspath("../models/Steven_rr.pt")
-VALIDATE_DIFFUSION = os.getenv("VALIDATE_DIFFUSION").lower() in ('true', '1')
-VALIDATION_SAMPLES = 100
 
 # Weights and Biases
 WANDB_KEY = os.getenv("WANDB_KEY")

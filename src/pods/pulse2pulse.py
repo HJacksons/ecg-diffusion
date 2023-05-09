@@ -1,25 +1,23 @@
 from src.networks.Pulse2Pulse import WaveGANGenerator, WaveGANDiscriminator
 from src.contracts.pod import PodContract
-import helpers
 from torch.autograd import Variable
-from torch import autograd
 import src.configuration as conf
-import torch.nn as nn
+import src.helpers as helpers
+from torch import autograd
 import torch
 
 
 class Pulse2PulsePod(PodContract):
     def __init__(self, lr):
-        self.netG = WaveGANGenerator().to(device=conf.DEVICE)
+        self.model = WaveGANGenerator().to(device=conf.DEVICE)
         self.netD = WaveGANDiscriminator().to(device=conf.DEVICE)
 
-        self.optimizerG = torch.optim.Adam(self.netG.parameters(), lr=0.0001, betas=(0.5, 0.9))
+        self.optimizerG = torch.optim.Adam(self.model.parameters(), lr=0.0001, betas=(0.5, 0.9))
         self.optimizerD = torch.optim.Adam(self.netD.parameters(), lr=0.0001, betas=(0.5, 0.9))
 
         self.train_G_flag = False
 
     def batch_processing(self, batch, leadsI_VIII, feature):
-
         if (batch+1) % 5 == 0:
             self.train_G_flag = True
 
@@ -53,7 +51,7 @@ class Pulse2PulsePod(PodContract):
         D_real.backward(neg_one)  # loss * -1
 
         # b) compute loss contribution from generated data, then backprop.
-        fake = autograd.Variable(self.netG(noise_Var).data)
+        fake = autograd.Variable(self.model(noise_Var).data)
         D_fake = self.netD(fake)
         D_fake = D_fake.mean()
         D_fake.backward(one)
@@ -74,13 +72,13 @@ class Pulse2PulsePod(PodContract):
         #############################
         # (3) Train Generator
         #############################
-        if train_G_flag:
+        if self.train_G_flag:
             # Prevent discriminator update.
             for p in self.netD.parameters():
                 p.requires_grad = False
 
             # Reset generator gradients
-            self.netG.zero_grad()
+            self.model.zero_grad()
 
             # Noise
             noise = torch.Tensor(b_size, 8, 5000).uniform_(-1, 1)
@@ -88,7 +86,7 @@ class Pulse2PulsePod(PodContract):
             noise = noise.to(device=conf.DEVICE)
             noise_Var = Variable(noise, requires_grad=False)
 
-            fake = self.netG(noise_Var)
+            fake = self.model(noise_Var)
             G = self.netD(fake)
             G = G.mean()
 
@@ -106,12 +104,14 @@ class Pulse2PulsePod(PodContract):
         return None
 
     def sampling(self, epoch):
-        self.netG.eval()
+        self.model.eval()
         with torch.inference_mode():
             noise = torch.Tensor(1, 8, 5000).uniform_(-1, 1).to(device=conf.DEVICE)
-            fake = self.netG(noise)
+            fake = self.model(noise)
 
-            plot_path = f'{conf.PLOTS_FOLDER}/{conf.MODEL}-epoch{epoch}'
+            plot_path = f'{conf.PLOTS_FOLDER}/{conf.MODEL}-epoch-{epoch}'
             helpers.create_and_save_plot(fake[0].cpu().detach().numpy(), filename=plot_path)
         return plot_path
-        
+
+    def validation(self):
+        return None
