@@ -1,7 +1,7 @@
-from src.networks.Steven import KanResWide_X
-from src.contracts.pod import PodContract
-import src.configuration as conf
-import src.helpers as helpers
+from networks.Steven import KanResWide_X
+from contracts.pod import PodContract
+import configuration as conf
+import helpers as helpers
 import torch.optim as optim
 import torch.nn as nn
 import torch

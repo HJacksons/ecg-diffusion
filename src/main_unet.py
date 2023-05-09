@@ -1,4 +1,4 @@
-from src.networks.UNet import UNet
+from networks.UNet import UNet
 from diffusers import DDPMScheduler
 import configuration as conf
 from tqdm.auto import tqdm

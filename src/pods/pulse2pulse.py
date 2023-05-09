@@ -1,8 +1,8 @@
-from src.networks.Pulse2Pulse import WaveGANGenerator, WaveGANDiscriminator
-from src.contracts.pod import PodContract
+from networks.Pulse2Pulse import WaveGANGenerator, WaveGANDiscriminator
+from contracts.pod import PodContract
 from torch.autograd import Variable
-import src.configuration as conf
-import src.helpers as helpers
+import configuration as conf
+import helpers as helpers
 from torch import autograd
 import torch
 

@@ -1,5 +1,5 @@
-from src.datasets import PTB_Dataset
-import src.configuration as conf
+from datasets import PTB_Dataset
+import configuration as conf
 import zipfile
 import os
 

@@ -1,9 +1,9 @@
-from src.networks.UNet import UNet
-from src.contracts.pod import PodContract
+from networks.UNet import UNet
+from contracts.pod import PodContract
 from diffusers import DDPMScheduler
-import src.configuration as conf
+import configuration as conf
 import torch.nn as nn
-import src.helpers as helpers
+import helpers as helpers
 import torch
 
 

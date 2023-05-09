@@ -1,8 +1,8 @@
-from src.pods.diffwave import DiffWavePod
-from src.pods.unet import UNetPod
-from src.pods.steven import StevenPod
-from src.pods.pulse2pulse import Pulse2PulsePod
-import src.configuration as conf
+from pods.diffwave import DiffWavePod
+from pods.unet import UNetPod
+from pods.steven import StevenPod
+from pods.pulse2pulse import Pulse2PulsePod
+import configuration as conf
 import wandb
 
 

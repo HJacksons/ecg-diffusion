@@ -1,4 +1,4 @@
-from src.networks.DiffWave import DiffWave
+from networks.DiffWave import DiffWave
 import configuration as conf
 from tqdm.auto import tqdm
 import torch.nn as nn

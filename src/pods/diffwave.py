@@ -1,7 +1,7 @@
-from src.networks.DiffWave import DiffWave
-from src.contracts.pod import PodContract
-import src.configuration as conf
-import src.helpers as helpers
+from networks.DiffWave import DiffWave
+from contracts.pod import PodContract
+import configuration as conf
+import helpers as helpers
 import torch.nn as nn
 import numpy as np
 import torch

@@ -5,7 +5,7 @@ import wandb
 import torch
 import yaml
 
-from src.pods.pod import ModelPod
+from pods.pod import ModelPod
 
 # Init WANDB if needed
 if conf.USE_WEIGHTS_AND_BIASES:
