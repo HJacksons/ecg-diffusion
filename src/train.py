@@ -46,12 +46,17 @@ def training_loop():
         # Run sampling operations
         plot_filename = model_container.pod.sampling(epoch=epoch)
 
+        # Run validation
+        validation_loss_average = model_container.pod.validation()
+
         # Report results to WandB
         if conf.USE_WEIGHTS_AND_BIASES:
-            wandb.log({
-                "MSE": train_loss_average,
-                "ECG": wandb.Image(plot_filename + ".png")
-            })
+            if train_loss_average:
+                wandb.log({"t-loss": train_loss_average})
+            if validation_loss_average:
+                wandb.log({"v-loss": validation_loss_average})
+            if plot_filename:
+                wandb.log({"ECG": wandb.Image(plot_filename + ".png")})
         print(f'Epoch: {epoch}. Average train loss: {train_loss_average:04f}.')
 
         # save model every 10 epochs

@@ -1,14 +1,10 @@
 from src.networks.Steven import KanResWide_X
 from src.contracts.pod import PodContract
-import helpers
-
 import src.configuration as conf
+import src.helpers as helpers
+import torch.optim as optim
 import torch.nn as nn
 import torch
-import torch.optim as optim
-import torch.nn.functional as F
-import numpy as np
-import random
 
 
 feature_index = {
@@ -33,7 +29,7 @@ class StevenPod(PodContract):
         self.loss_fn = nn.MSELoss()
         self.optimizer = optim.NAdam(self.model.parameters(), lr=lr, betas=(0.9, 0.999), weight_decay=0.004)
 
-    def batch_processing(self, leadsI_VIII, feature):
+    def batch_processing(self, batch, leadsI_VIII, feature):
         self.optimizer.zero_grad()
 
         feature = feature[:,feature_index[conf.FEATURE]].float().unsqueeze(1).to(device=conf.DEVICE)
@@ -46,6 +42,9 @@ class StevenPod(PodContract):
         self.optimizer.step()
 
         return loss.cpu()
+
+    def sampling(self, epoch):
+        return None
 
     def validation(self):
         _, validation_dataloader = helpers.get_dataloader(target='validation', batch_size=32, shuffle=True)
