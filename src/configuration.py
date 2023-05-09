@@ -7,7 +7,7 @@ load_dotenv()
 
 # General
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-DATASET_PATH = os.path.abspath("PTB")
+DATASET_PATH = os.path.abspath("../PTB-dataset")
 PLOTS_FOLDER = os.path.abspath("../data/plots")
 MODELS_FOLDER = os.path.abspath("../models")
 ACTION = "train"  # Options: ("train", "tune")
