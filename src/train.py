@@ -1,3 +1,4 @@
+from pods.pod import ModelPod
 import configuration as conf
 from tqdm.auto import tqdm
 import helpers
@@ -5,7 +6,10 @@ import wandb
 import torch
 import yaml
 
-from pods.pod import ModelPod
+
+helpers.create_folder_if_not_exists(conf.PLOTS_FOLDER)
+helpers.create_folder_if_not_exists(conf.MODELS_FOLDER)
+helpers.create_folder_if_not_exists(conf.GEN_DATA_FOLDER)
 
 # Init WANDB if needed
 if conf.USE_WEIGHTS_AND_BIASES:
