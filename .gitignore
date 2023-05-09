@@ -5,5 +5,7 @@
 /src/networks/__pycache__
 /src/wandb
 /src/plots
+/models
+/data/generated
 .DS_Store
 .env
