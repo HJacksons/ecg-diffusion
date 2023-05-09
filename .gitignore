@@ -9,6 +9,7 @@
 /src/wandb
 /src/plots
 /models
+/data/generated
 /data/plots
 .DS_Store
 .env
