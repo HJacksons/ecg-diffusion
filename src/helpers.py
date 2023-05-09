@@ -10,6 +10,7 @@ import random
 import wandb
 import torch
 
+
 def init_wandb() -> wandb:
     wandb.login(key=conf.WANDB_KEY)
     wandb.init(
@@ -53,7 +54,7 @@ def create_and_save_plot(generated_leads_I_VIII, filename, file_extension='.png'
     for i in range(4):
         # axs[i, 1].plot(leadsI_VIII[i+3], linewidth=LINE_WIDTH)
         axs[i, 1].plot(generated_leads_I_VIII[i + 3], linewidth=LINE_WIDTH)
-    
+
     if label is not None:
         fig.text(0.5, 0.95, f'RR interval: {label}', ha='center', fontsize=16)
 
@@ -103,5 +104,3 @@ def calc_gradient_penalty(net_dis, real_data, fake_data, batch_size, lmbda, use_
     # to be a 1-Lipschitz function.
     gradient_penalty = lmbda * ((gradients.norm(2, dim=1) - 1) ** 2).mean()
     return gradient_penalty
-
-
