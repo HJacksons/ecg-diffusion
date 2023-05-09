@@ -31,17 +31,21 @@ def training_loop():
 
     # Training loop
     for epoch in tqdm(range(conf.EPOCHS), desc='Epochs', colour='green', leave=False, position=0):
-        train_loss_average = 0
+        train_loss_history = []
 
         batch = 0
         for (leadsI_VIII, feature) in tqdm(train_dataloader, desc='Batch', leave=False, position=1):
             leadsI_VIII = leadsI_VIII.to(device=conf.DEVICE)
 
             # Run batch operations
-            train_loss_average += model_container.pod.batch_processing(batch, leadsI_VIII, feature)
+            train_loss = model_container.pod.batch_processing(batch, leadsI_VIII, feature)
+
+            if train_loss:
+                train_loss_history.append(train_loss)
+
             batch += 1
         # Record average training loss
-        train_loss_average /= len(train_dataloader)
+        train_loss_average = sum(train_loss_history)/len(train_loss_history)
 
         # Run sampling operations
         plot_filename = model_container.pod.sampling(epoch=epoch)
