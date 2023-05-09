@@ -63,7 +63,9 @@ def training_loop():
         if epoch % 10 == 0:
             model_filename = f"{conf.MODELS_FOLDER}/{conf.MODEL}_epoch{epoch}.pt"
             torch.save(model_container.pod.model.state_dict(), model_filename)
-            wandb.log_artifact(model_filename, name=f'model_epoch_{epoch}', type='Model')
+
+            if conf.USE_WEIGHTS_AND_BIASES:
+                wandb.log_artifact(model_filename, name=f'model_epoch_{epoch}', type='Model')
 
 
 # Run action
