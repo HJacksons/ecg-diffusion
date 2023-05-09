@@ -16,6 +16,9 @@ EPOCHS = 1000
 # Network
 MODEL = "diffwave"  # Options: ("diffwave", "unet")
 
+# Steven
+FEATURE = 'rr' # rr | qrs | pr | qt | VentricularRate | R_Peak_i | R_Peak_ii | R_Peak_v1 | R_Peak_v2 | R_Peak_v3 | R_Peak_v4 | R_Peak_v5 | R_Peak_v6
+
 # Validation
 TRAINED_MODEL_PATH = os.path.abspath("../models/Steven_rr.pt")
 VALIDATE_DIFFUSION = os.getenv("VALIDATE_DIFFUSION").lower() in ('true', '1')
@@ -29,8 +32,9 @@ USE_WEIGHTS_AND_BIASES = os.getenv("USE_WEIGHTS_AND_BIASES").lower() in ('true',
 
 # Train
 HYPER_PARAMETERS = {
-    'learning_rate': 0.0002,
-    'batch_size': 16,
+    'learning_rate': 0.0003,
+    'batch_size': 32,
     'residual_layers': 36, 
     'residual_channels': 256, 
+    'time_steps': 200,
 }

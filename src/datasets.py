@@ -5,6 +5,7 @@ import random
 import torch
 import glob
 import os
+import numpy as np
 
 
 class TensorDataset(Dataset):
@@ -76,57 +77,8 @@ class TensorDataset(Dataset):
         return input
 
 
-class Synthetic_Dataset(TensorDataset):
-    MAX_VALUE = 5011
-    header = [x for x in range(8)]
-
-    def __init__(self, data_dirs: Union[str, list[str]], target: Literal["train", "test", "validation"] = "train"):
-        super().__init__(data_dirs, target)
-
-    def convert_to_millivolts(self, input):
-        return input / 1000
-
-    @staticmethod
-    def convert_input(input):
-        return input / Synthetic_Dataset.MAX_VALUE
-
-    @staticmethod
-    def convert_output(tensor_out):
-        return tensor_out * Synthetic_Dataset.MAX_VALUE
-
-    def max_value(self):
-        max_value = 0
-        for folder in ['train', 'test', 'validation']:
-            for data_dir in self.data_dir:
-                for filename in glob.glob(f'{data_dir}/{folder}/*.csv'):
-                    print(filename)
-                    temp_df = pd.read_csv(filename, sep=" ", names=Synthetic_Dataset.header)
-                    temp_tensor_in = torch.tensor(temp_df.iloc[:, 0], dtype=torch.float32).unsqueeze(0)
-                    temp_tensor_out = torch.tensor(temp_df.iloc[:, 1:9].values, dtype=torch.float32).t()
-                    max_in = torch.max(temp_tensor_in).item()
-                    min_in = torch.min(temp_tensor_in).item()
-                    max_out = torch.max(temp_tensor_out).item()
-                    min_out = torch.min(temp_tensor_out).item()
-                    max_value = max(max_value, max_in, max_out, abs(min_in), abs(min_out))
-        print(max_value)
-
-    def convert(self):
-        for folder in ['train', 'test', 'validation']:
-            for data_dir in self.data_dir:
-                for filename in glob.glob(f'{data_dir}/{folder}/*.asc'):
-                    print(filename)
-                    ecg_index = int(os.path.basename(filename).removesuffix('.asc'))
-                    temp_df = pd.read_csv(filename, sep=" ", names=Synthetic_Dataset.header)
-                    temp_tensor_in = torch.tensor(Synthetic_Dataset.convert_input(temp_df.iloc[:, 0]),
-                                                  dtype=torch.float32).unsqueeze(0)
-                    temp_tensor_out = torch.tensor(Synthetic_Dataset.convert_input(temp_df.iloc[:, 1:9].values),
-                                                   dtype=torch.float32).t()
-                    temp_tensor_pair = (temp_tensor_in, temp_tensor_out)
-                    torch.save(temp_tensor_pair, f'{data_dir}/{folder}/{str(ecg_index).zfill(5)}.pt')
-
-
 class PTB_Dataset(TensorDataset):
-    MAX_VALUE = 33  # 32.715999603271484
+    MAX_VALUE = 8  # 32.715999603271484
     header = ["I", "II", "III", "aVF", "aVR", "aVL", "V1", "V2", "V3", "V4", "V5", "V6", "egc_id", "rr_interval"]
 
     def __init__(self, data_dirs: Union[str, list[str]], target: Literal["train", "test", "validation"] = 'train'):
@@ -134,7 +86,7 @@ class PTB_Dataset(TensorDataset):
 
     @staticmethod
     def convert_input(input):
-        return input / PTB_Dataset.MAX_VALUE
+        return np.clip(a=input / PTB_Dataset.MAX_VALUE, a_min=-1, a_max=1)
 
     @staticmethod
     def convert_output(tensor_out):
@@ -162,10 +114,17 @@ class PTB_Dataset(TensorDataset):
                 for filename in glob.glob(f'{data_dir}/{folder}/*.csv'):
                     ecg_index = int(os.path.basename(filename).removeprefix('ecg').removesuffix('.csv'))
                     temp_df = pd.read_csv(filename)
-                    # temp_tensor_in = torch.tensor(PTB_Dataset.convert_input(temp_df.iloc[:, 0]), dtype=torch.float32).unsqueeze(0)
-                    temp_tensor_in = torch.tensor(
-                        PTB_Dataset.convert_input(temp_df.iloc[:, [0, 1, 6, 7, 8, 9, 10, 11]].values),
-                        dtype=torch.float32).t()
-                    temp_tensor_out = torch.tensor(temp_df.iloc[:, [13]].values)
-                    temp_tensor_pair = (temp_tensor_in, temp_tensor_out[0].long())
+                    temp_tensor_in = torch.tensor(PTB_Dataset.convert_input(temp_df.iloc[:, [0, 1, 6, 7, 8, 9, 10, 11]].values), dtype=torch.float32).t()
+                    temp_tensor_out = torch.tensor(temp_df.iloc[:, [12, 13, 14, 15, 16, 17, 18, 20, 21, 22, 23, 24, 25]].values)
+                    temp_tensor_pair = (temp_tensor_in, temp_tensor_out[0])
                     torch.save(temp_tensor_pair, f'{data_dir}/{folder}/{str(ecg_index).zfill(5)}.pt')
+
+
+# import zipfile
+# with zipfile.ZipFile('PTB.zip', 'r') as zip_ref:
+#     zip_ref.extractall()
+
+
+# dataset_folder = 'PTB'
+# transformer = PTB_Dataset(dataset_folder)
+# transformer.convert()

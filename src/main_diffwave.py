@@ -20,7 +20,7 @@ if conf.ACTION in ("train", "tune"):
 
 
 def training_loop():
-    noise_schedule = np.linspace(1e-4, 0.05, 50).tolist()
+    noise_schedule = np.linspace(1e-4, 0.05, conf.HYPER_PARAMETERS['time_steps']).tolist()
     inference_noise_schedule = [0.0001, 0.001, 0.01, 0.05, 0.2, 0.5]
 
     # Model and learning method
@@ -29,7 +29,7 @@ def training_loop():
         conf.HYPER_PARAMETERS['residual_channels'],
         dilation_cycle_length=10,
         n_mels=80,  # just for conditional
-        noise_schedule=np.linspace(1e-4, 0.05, 50).tolist(),
+        noise_schedule=noise_schedule,
         unconditional=True
     ).to(conf.DEVICE)
 
@@ -55,7 +55,7 @@ def training_loop():
     for epoch in tqdm(range(conf.EPOCHS), desc='Epochs', colour='green', leave=False, position=0):
         train_loss_average = 0
 
-        for (leadsI_VIII, rr) in tqdm(train_dataloader, desc='Batch', leave=False, position=1):
+        for (leadsI_VIII, _) in tqdm(train_dataloader, desc='Batch', leave=False, position=1):
             optimizer.zero_grad()
 
             leadsI_VIII = leadsI_VIII.to(device=conf.DEVICE)
@@ -73,7 +73,6 @@ def training_loop():
 
             scaler.scale(loss).backward()
             scaler.unscale_(optimizer)
-            grad_norm = nn.utils.clip_grad_norm_(model.parameters(), 1e9)
             scaler.step(optimizer)
             scaler.update()
 
@@ -127,9 +126,11 @@ def training_loop():
         print(f'Epoch: {epoch}. Average train loss: {train_loss_average:04f}.')
 
         # save model every 10 epochs
-        if epoch % 10 == 0:
-            model_filename = f"{conf.MODELS_FOLDER}/model_epoch{epoch}.pt"
-            torch.save(model.state_dict(), model_filename)
+        if conf.USE_WEIGHTS_AND_BIASES:
+            if epoch % 10 == 0:
+                model_filename=f"{conf.MODELS_FOLDER}/model"
+                torch.save(model.state_dict(), model_filename)
+                wandb.log_artifact(model_filename, name=f'model_epoch_{epoch}', type='Model') 
 
 
 # Run action
