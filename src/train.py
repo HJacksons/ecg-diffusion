@@ -33,12 +33,12 @@ def training_loop():
     for epoch in tqdm(range(conf.EPOCHS), desc='Epochs', colour='green', leave=False, position=0):
         train_loss_average = 0
 
-        for (leadsI_VIII, rr) in tqdm(train_dataloader, desc='Batch', leave=False, position=1):
+        for batch, (leadsI_VIII, rr) in tqdm(train_dataloader, desc='Batch', leave=False, position=1):
             leadsI_VIII = leadsI_VIII.to(device=conf.DEVICE)
             rr = rr.to(device=conf.DEVICE)
 
             # Run batch operations
-            train_loss_average += model_container.pod.batch_processing(leadsI_VIII, rr)
+            train_loss_average += model_container.pod.batch_processing(batch, leadsI_VIII, rr)
         # Record average training loss
         train_loss_average /= len(train_dataloader)
 

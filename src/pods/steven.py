@@ -1,5 +1,6 @@
 from src.networks.Steven import KanResWide_X
 from src.contracts.pod import PodContract
+import helpers
 
 import src.configuration as conf
 import torch.nn as nn
@@ -46,6 +47,19 @@ class StevenPod(PodContract):
 
         return loss.cpu()
 
-    def post_batch_processing(self, epoch):
-        #  We do not run any other operations other than batch for UNet
-        pass
+    def validation(self):
+        _, validation_dataloader = helpers.get_dataloader(target='validation', batch_size=32, shuffle=True)
+        self.model.eval()
+        with torch.inference_mode():
+            validation_loss_average = 0
+            for batch, (leadsI_VIII, feature) in enumerate(validation_dataloader):
+                feature = feature[:,feature_index[conf.FEATURE]].float().unsqueeze(1).to(device=conf.DEVICE)
+                leadsI_VIII = leadsI_VIII.to(device=conf.DEVICE)
+                predicted_feature = self.model(leadsI_VIII)
+
+                loss = self.loss_fn(predicted_feature, feature)
+
+                validation_loss_average += loss.cpu()
+
+            validation_loss_average /= len(validation_dataloader)
+            return validation_loss_average
