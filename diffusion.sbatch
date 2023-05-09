@@ -2,4 +2,4 @@
 #SBATCH -p dgx2q
 #SBATCH --gres=gpu:1
  
-CUDA_LAUNCH_BLOCKING=1 srun python src/main.py
+CUDA_LAUNCH_BLOCKING=1 srun python src/train.py
