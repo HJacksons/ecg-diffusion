@@ -46,6 +46,6 @@ class StevenPod(PodContract):
 
         return loss.cpu()
 
-    def post_batch_processing(self):
+    def post_batch_processing(self, epoch):
         #  We do not run any other operations other than batch for UNet
         pass

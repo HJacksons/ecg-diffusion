@@ -11,5 +11,9 @@ class PodContract(ABC):
         pass
 
     @abstractmethod
-    def post_batch_processing(self):
+    def sampling(self, epoch):
+        pass
+
+    @abstractmethod
+    def validation(self):
         pass

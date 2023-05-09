@@ -103,16 +103,17 @@ def training_loop():
             T = np.array(T, dtype=np.float32)
 
             audio = torch.randn(8, 5000, device=conf.DEVICE)
-            noise_scale = torch.from_numpy(alpha_cum ** 0.5).float().unsqueeze(1).to(conf.DEVICE)
 
             for n in range(len(alpha) - 1, -1, -1):
                 c1 = 1 / alpha[n] ** 0.5
                 c2 = beta[n] / (1 - alpha_cum[n]) ** 0.5
                 audio = c1 * (audio - c2 * model(audio, torch.tensor([T[n]], device=conf.DEVICE)).squeeze(1))
+
                 if n > 0:
                     noise = torch.randn_like(audio)
                     sigma = ((1.0 - alpha_cum[n - 1]) / (1.0 - alpha_cum[n]) * beta[n]) ** 0.5
                     audio += sigma * noise
+
                 audio = torch.clamp(audio, -1.0, 1.0)
 
         helpers.create_and_save_plot(audio[0].cpu().detach().numpy(), filename=f'{conf.PLOTS_FOLDER}/ecg{epoch}')

@@ -34,17 +34,19 @@ def training_loop():
         train_loss_average = 0
 
         for (leadsI_VIII, rr) in tqdm(train_dataloader, desc='Batch', leave=False, position=1):
+            leadsI_VIII = leadsI_VIII.to(device=conf.DEVICE)
+            rr = rr.to(device=conf.DEVICE)
+
             # Run batch operations
             train_loss_average += model_container.pod.batch_processing(leadsI_VIII, rr)
         # Record average training loss
         train_loss_average /= len(train_dataloader)
 
-        # Run epoch operations
-        model_container.pod.post_batch_processing()
+        # Run sampling operations
+        plot_filename = model_container.pod.sampling(epoch=epoch)
 
         # Report results to WandB
         if conf.USE_WEIGHTS_AND_BIASES:
-            plot_filename = f"{conf.PLOTS_FOLDER}/{conf.MODEL}_ecg_epoch_{epoch}"
             wandb.log({
                 "MSE": train_loss_average,
                 "ECG": wandb.Image(plot_filename + ".png")
@@ -53,8 +55,9 @@ def training_loop():
 
         # save model every 10 epochs
         if epoch % 10 == 0:
-            model_filename = f"{conf.MODELS_FOLDER}/{conf.MODEL}_epoch_{epoch}.pt"
+            model_filename = f"{conf.MODELS_FOLDER}/{conf.MODEL}_epoch{epoch}.pt"
             torch.save(model_container.pod.model.state_dict(), model_filename)
+            wandb.log_artifact(model_filename, name=f'model_epoch_{epoch}', type='Model')
 
 
 # Run action
