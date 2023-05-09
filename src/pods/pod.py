@@ -1,5 +1,7 @@
 from src.pods.diffwave import DiffWavePod
 from src.pods.unet import UNetPod
+from src.pods.steven import StevenPod
+from src.pods.pulse2pulse import Pulse2PulsePod
 import src.configuration as conf
 import wandb
 
@@ -16,6 +18,12 @@ class ModelPod:
         # DiffWave configuration
         elif conf.MODEL == "diffwave":
             self.pod = DiffWavePod(lr=self.lr)
+
+        elif conf.MODEL == "steven":
+            self.pod = StevenPod(lr=self.lr)
+
+        elif conf.MODEL == "pulse2pulse":
+            self.pod = Pulse2PulsePod(lr=self.lr)
 
         # Add any new network pods here
 
