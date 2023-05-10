@@ -1,9 +1,9 @@
-from networks.UNet import UNet
 from contracts.pod import PodContract
 from diffusers import DDPMScheduler
+from networks.UNet import UNet
 import configuration as conf
+from tqdm.auto import tqdm
 import torch.nn as nn
-import helpers as helpers
 import torch
 
 
@@ -29,20 +29,28 @@ class UNetPod(PodContract):
 
         return loss.cpu()
 
-    def sampling(self, epoch):
+    def sampling(self, load_pretrained_model=False):
+        trained_model_path = f"{conf.MODELS_FOLDER}/UNet_epoch980.pt"
+
+        if load_pretrained_model:
+            self.model.load_state_dict(
+                torch.load(
+                    trained_model_path,
+                    map_location=torch.device(conf.DEVICE)
+                )
+            )
+
         x = torch.randn(1, 8, 5000).to(device=conf.DEVICE)
 
         self.model.eval()
-        for i, t in enumerate(self.noise_scheduler.timesteps):
+        for t in tqdm(self.noise_scheduler.timesteps, desc='Sampling', leave=False, position=0):
             with torch.no_grad():
                 residual = self.model(x, t.to(device=conf.DEVICE))
+
                 # Update sample with step
             x = self.noise_scheduler.step(residual, t, x).prev_sample
 
-        plot_path = f'{conf.PLOTS_FOLDER}/{conf.MODEL}-epoch-{epoch}'
-        helpers.create_and_save_plot(x[0].cpu().detach().numpy(), filename=plot_path)
-
-        return plot_path
+        return x
 
     def validation(self):
         pass

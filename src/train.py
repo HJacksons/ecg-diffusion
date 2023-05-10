@@ -10,6 +10,7 @@ import yaml
 helpers.create_folder_if_not_exists(conf.PLOTS_FOLDER)
 helpers.create_folder_if_not_exists(conf.MODELS_FOLDER)
 helpers.create_folder_if_not_exists(conf.GEN_DATA_FOLDER)
+helpers.create_folder_if_not_exists(conf.GEN_MODELS_FOLDER)
 
 # Init WANDB if needed
 if conf.USE_WEIGHTS_AND_BIASES:
@@ -52,7 +53,13 @@ def training_loop():
         train_loss_average = sum(train_loss_history)/len(train_loss_history)
 
         # Run sampling operations
-        plot_filename = model_container.pod.sampling(epoch=epoch)
+        x = model_container.pod.sampling(epoch=epoch)
+
+        # If we sample data, plot and save
+        plot_filename = None
+        if x:
+            plot_filename = f'{conf.PLOTS_FOLDER}/{conf.MODEL}-epoch-{epoch}'
+            helpers.create_and_save_plot(x[0].cpu().detach().numpy(), filename=plot_filename)
 
         # Run validation
         validation_loss_average = model_container.pod.validation()

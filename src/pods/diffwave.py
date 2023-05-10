@@ -1,7 +1,7 @@
 from networks.DiffWave import DiffWave
 from contracts.pod import PodContract
 import configuration as conf
-import helpers as helpers
+from tqdm.auto import tqdm
 import torch.nn as nn
 import numpy as np
 import torch
@@ -51,9 +51,18 @@ class DiffWavePod(PodContract):
 
         return loss.cpu()
 
-    def sampling(self, epoch):
+    def sampling(self, load_pretrained_model=False):
+        trained_model_path = f"{conf.MODELS_FOLDER}/Diffwave_epoch900.pt"
+
+        if load_pretrained_model:
+            self.model.load_state_dict(
+                torch.load(
+                    trained_model_path,
+                    map_location=torch.device(conf.DEVICE)
+                )
+            )
+
         self.model.eval()
-        
         with torch.no_grad():
             training_noise_schedule = np.array(self.noise_schedule)
             inference_noise_schedule = np.array(self.inference_noise_schedule)
@@ -77,7 +86,8 @@ class DiffWavePod(PodContract):
 
             signal = torch.randn(8, 5000, device=conf.DEVICE)
 
-            for n in range(len(alpha) - 1, -1, -1):
+            # Sapling loop
+            for n in tqdm(range(len(alpha) - 1, -1, -1), desc='Sampling', leave=False, position=0):
                 c1 = 1 / alpha[n] ** 0.5
                 c2 = beta[n] / (1 - alpha_cum[n]) ** 0.5
                 signal = c1 * (signal - c2 * self.model(signal, torch.tensor([T[n]], device=conf.DEVICE)).squeeze(1))
@@ -89,10 +99,7 @@ class DiffWavePod(PodContract):
 
                 signal = torch.clamp(signal, -1.0, 1.0)
 
-        plot_path = f'{conf.PLOTS_FOLDER}/{conf.MODEL}-epoch-{epoch}'
-        helpers.create_and_save_plot(signal[0].cpu().detach().numpy(), filename=plot_path)
-
-        return plot_path
+        return signal
 
     def validation(self):
         pass

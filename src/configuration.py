@@ -7,10 +7,11 @@ load_dotenv()
 
 # General
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-DATASET_PATH = os.path.abspath("PTB-dataset")
-PLOTS_FOLDER = os.path.abspath("data/plots")
-MODELS_FOLDER = os.path.abspath("models")
-GEN_DATA_FOLDER = os.path.abspath("data/generated")
+DATASET_PATH = os.path.abspath("../PTB-dataset")
+PLOTS_FOLDER = os.path.abspath("../data/plots")
+MODELS_FOLDER = os.path.abspath("../models")
+GEN_MODELS_FOLDER = os.path.abspath("../models/generated")
+GEN_DATA_FOLDER = os.path.abspath("../data/generated")
 ACTION = "train"  # Options: ("train", "tune")
 EPOCHS = 1000
 

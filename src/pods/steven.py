@@ -43,7 +43,8 @@ class StevenPod(PodContract):
 
         return loss.cpu()
 
-    def sampling(self, epoch):
+    def sampling(self, load_pretrained_model=False):
+        print("Steven model does not support sampling")
         return None
 
     def validation(self):
