@@ -16,10 +16,12 @@ ACTION = "train"  # Options: ("train", "tune")
 EPOCHS = 1000
 
 # Network
-MODEL = "diffwave"  # Options: ("diffwave", "unet", "steven", "pulse2pulse")
+MODEL = "pulse2pulse"  # Options: ("unet", "diffwave", "pulse2pulse", "steven")
 
-# Steven
-FEATURE = 'rr' # rr | qrs | pr | qt | VentricularRate | R_Peak_i | R_Peak_ii | R_Peak_v1 | R_Peak_v2 | R_Peak_v3 | R_Peak_v4 | R_Peak_v5 | R_Peak_v6
+# The feature that the Steven model should be trained for.
+# Options: ("rr", "qrs", "pr", "qt", "VentricularRate", "R_Peak_i", "R_Peak_ii", "R_Peak_v1", "R_Peak_v2", "R_Peak_v3",
+# "R_Peak_v4", "R_Peak_v5", "R_Peak_v6")
+FEATURE = 'rr'
 
 # Weights and Biases
 WANDB_KEY = os.getenv("WANDB_KEY")
