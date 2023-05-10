@@ -10,13 +10,13 @@ import torch
 # Init the pod that houses the models
 model_container = ModelPod()
 
-NUMBER_OF_FILES_TO_GENERATE = 1
+NUMBER_OF_FILES_TO_GENERATE = 1200
 STEVEN_MODELS = ['rr', 'qrs', 'qt', 'ventr_rate', 'r_peak_i', 'r_peak_v1']
 
 steven_net = KanResWide_X().to(device=conf.DEVICE)
 
 # Sampling loop
-for file_index in range(NUMBER_OF_FILES_TO_GENERATE):
+for file_index in tqdm(range(NUMBER_OF_FILES_TO_GENERATE), desc='Files', colour='blue', leave=False, position=1):
     x = model_container.pod.sampling(load_pretrained_model=True)
 
     if x is None:
@@ -52,8 +52,8 @@ for file_index in range(NUMBER_OF_FILES_TO_GENERATE):
     # save csv file
     x_df.to_csv(f'{conf.GEN_DATA_FOLDER}/{conf.MODEL}-{file_index}.csv', index=False)
 
-    # create plots
-    helpers.create_and_save_plot(
-        x[0].cpu().detach().numpy(),
-        filename=f'{conf.PLOTS_FOLDER}/{conf.MODEL}-ecg-{file_index}'
-    )
+    # # create plots
+    # helpers.create_and_save_plot(
+    #     x[0].cpu().detach().numpy(),
+    #     filename=f'{conf.PLOTS_FOLDER}/{conf.MODEL}-ecg-{file_index}'
+    # )
