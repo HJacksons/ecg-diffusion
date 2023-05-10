@@ -7,6 +7,10 @@ import numpy as np
 import helpers
 import torch
 
+
+helpers.create_folder_if_not_exists(conf.PLOTS_FOLDER)
+helpers.create_folder_if_not_exists(conf.GEN_DATA_FOLDER)
+
 # Init the pod that houses the models
 model_container = ModelPod()
 
