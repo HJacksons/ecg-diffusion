@@ -19,7 +19,7 @@ steven_net = KanResWide_X().to(device=conf.DEVICE)
 for file_index in range(NUMBER_OF_FILES_TO_GENERATE):
     x = model_container.pod.sampling(load_pretrained_model=True)
 
-    if not x:
+    if x is None:
         exit(1)
 
     # create dataframe with the generated leads

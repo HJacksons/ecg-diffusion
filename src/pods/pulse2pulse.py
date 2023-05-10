@@ -104,7 +104,7 @@ class Pulse2PulsePod(PodContract):
         return None
 
     def sampling(self, load_pretrained_model=False):
-        trained_model_path = f"{conf.MODELS_FOLDER}/Pulse2pulse_epoch999.pt"
+        trained_model_path = f"{conf.MODELS_FOLDER}/Pulse2pulse_epoch530.pt"
 
         if load_pretrained_model:
             self.model.load_state_dict(
