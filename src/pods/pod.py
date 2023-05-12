@@ -1,15 +1,14 @@
-from pods.diffwave import DiffWavePod
-from pods.unet import UNetPod
-from pods.steven import StevenPod
 from pods.pulse2pulse import Pulse2PulsePod
+from pods.diffwave import DiffWavePod
+from pods.steven import StevenPod
+from pods.unet import UNetPod
 import configuration as conf
-import wandb
 
 
 class ModelPod:
     def __init__(self):
-        self.lr = wandb.config.learning_rate if conf.USE_WEIGHTS_AND_BIASES else conf.HYPER_PARAMETERS['learning_rate']
-        self.batch_size = wandb.config.batch_size if conf.USE_WEIGHTS_AND_BIASES else conf.HYPER_PARAMETERS['batch_size']
+        self.lr = conf.HYPER_PARAMETERS['learning_rate']
+        self.batch_size = conf.HYPER_PARAMETERS['batch_size']
 
         # Unet configuration
         if conf.MODEL == "unet":

@@ -103,15 +103,23 @@ class Pulse2PulsePod(PodContract):
             return G_cost_cpu.cpu()
         return None
 
-    def sampling(self, epoch):
+    def sampling(self, load_pretrained_model=False):
+        trained_model_path = f"{conf.MODELS_FOLDER}/Pulse2pulse_epoch530.pt"
+
+        if load_pretrained_model:
+            self.model.load_state_dict(
+                torch.load(
+                    trained_model_path,
+                    map_location=torch.device(conf.DEVICE)
+                )
+            )
+
         self.model.eval()
         with torch.inference_mode():
             noise = torch.Tensor(1, 8, 5000).uniform_(-1, 1).to(device=conf.DEVICE)
             fake = self.model(noise)
 
-            plot_path = f'{conf.PLOTS_FOLDER}/{conf.MODEL}-epoch-{epoch}'
-            helpers.create_and_save_plot(fake[0].cpu().detach().numpy(), filename=plot_path)
-        return plot_path
+        return fake
 
     def validation(self):
         return None

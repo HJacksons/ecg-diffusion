@@ -11,7 +11,7 @@ class PodContract(ABC):
         pass
 
     @abstractmethod
-    def sampling(self, epoch):
+    def sampling(self, load_pretrained_model=False):
         pass
 
     @abstractmethod

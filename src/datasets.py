@@ -1,11 +1,11 @@
 from typing import Literal, Tuple, Union
 from torch.utils.data import Dataset
 import pandas as pd
+import numpy as np
 import random
 import torch
 import glob
 import os
-import numpy as np
 
 
 class TensorDataset(Dataset):
@@ -118,13 +118,3 @@ class PTB_Dataset(TensorDataset):
                     temp_tensor_out = torch.tensor(temp_df.iloc[:, [12, 13, 14, 15, 16, 17, 18, 20, 21, 22, 23, 24, 25]].values)
                     temp_tensor_pair = (temp_tensor_in, temp_tensor_out[0])
                     torch.save(temp_tensor_pair, f'{data_dir}/{folder}/{str(ecg_index).zfill(5)}.pt')
-
-
-# import zipfile
-# with zipfile.ZipFile('PTB.zip', 'r') as zip_ref:
-#     zip_ref.extractall()
-
-
-# dataset_folder = 'PTB'
-# transformer = PTB_Dataset(dataset_folder)
-# transformer.convert()
