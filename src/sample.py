@@ -61,3 +61,27 @@ for file_index in tqdm(range(NUMBER_OF_FILES_TO_GENERATE), desc='Files', colour=
     #     x[0].cpu().detach().numpy(),
     #     filename=f'{conf.PLOTS_FOLDER}/{conf.MODEL}-ecg-{file_index}'
     # )
+
+
+# realistic ecg plots
+NUMBER_OF_PLOTS_TO_GENERATE = 5
+
+for file_index in range(0,NUMBER_OF_PLOTS_TO_GENERATE):
+    ecg_df = pd.read_csv(f"diffwave/diffwave-{file_index}.csv")
+
+    lead_I = ecg_df.loc[:, 'I']
+    lead_II = ecg_df.loc[:, 'II']
+    lead_v1 = ecg_df.loc[:, 'v1']
+    lead_v2 = ecg_df.loc[:, 'v2']
+    lead_v3 = ecg_df.loc[:, 'v3']
+    lead_v4 = ecg_df.loc[:, 'v4']
+    lead_v5 = ecg_df.loc[:, 'v5']
+    lead_v6 = ecg_df.loc[:, 'v6']
+    lead_III, lead_aVR, lead_aVL, lead_aVF = helpers.compute_leadIII_aVR_aVL_aVF(lead_I, lead_II)
+
+    data = np.array([lead_I, lead_II, lead_III, lead_aVR, lead_aVL, lead_aVF,
+        lead_v1, lead_v2, lead_v3,  lead_v4, lead_v5, lead_v6])
+
+
+    helpers.create_and_save_standardized_12_lead_ecg_plot(12, data*8, generated_leads=None, filename=f'diffwave_{file_index}', plot_seconds=10, plot_columns=2, plot_range=1.8, file_extension='.pdf')
+
