@@ -11,7 +11,7 @@ class UNetPod(PodContract):
     def __init__(self, lr):
         self.model = UNet().to(conf.DEVICE)
         self.loss_fn = nn.L1Loss()
-        self.noise_scheduler = DDPMScheduler(num_train_timesteps=300, beta_schedule='squaredcos_cap_v2')
+        self.noise_scheduler = DDPMScheduler(num_train_timesteps=conf.HYPER_PARAMETERS['time_steps'], beta_schedule='squaredcos_cap_v2')
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=lr, betas=(0.5, 0.999))
 
     def batch_processing(self, batch, leadsI_VIII, feature):
@@ -19,7 +19,7 @@ class UNetPod(PodContract):
 
         noise = torch.randn_like(leadsI_VIII)
 
-        timesteps = torch.randint(0, 299, (leadsI_VIII.shape[0],)).long().to(device=conf.DEVICE)
+        timesteps = torch.randint(0, conf.HYPER_PARAMETERS['time_steps'], (leadsI_VIII.shape[0],)).long().to(device=conf.DEVICE)
         noisy_x = self.noise_scheduler.add_noise(leadsI_VIII, noise, timesteps)
         predicted_noise = self.model(noisy_x, timesteps)
         loss = self.loss_fn(predicted_noise, noise)
