@@ -3,11 +3,9 @@ A latent diffusion model for generating ECG signals
 
 ## Getting started
 
-1. Make sure that you are in the root folder of the project
+1. Make sure that you are in the root folder of the project, during development we have used `python 3.9`
 2. Install the dependencies with `pip install -r requirements.txt`
-3. We use environment variables to control some services in the project but we have included a basic `.env` file in the zipped folder to get started quickly
-
-This project has been developer using `python 3.9`
+3. We use environment variables to control some services in the project but we have included a basic `.env` file in the Source folder to get started quickly
 
 ## Dataset
 
