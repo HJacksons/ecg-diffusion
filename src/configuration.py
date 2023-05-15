@@ -5,13 +5,15 @@ import os
 # Load variables from .env file
 load_dotenv()
 
+# Paths
+DATASET_PATH = os.path.abspath("./PTB-dataset")
+PLOTS_FOLDER = os.path.abspath("./data/plots")
+MODELS_FOLDER = os.path.abspath("./models")
+GEN_MODELS_FOLDER = os.path.abspath("./models/generated")
+GEN_DATA_FOLDER = os.path.abspath("./data/generated")
+
 # General
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-DATASET_PATH = os.path.abspath("../PTB-dataset")
-PLOTS_FOLDER = os.path.abspath("../data/plots")
-MODELS_FOLDER = os.path.abspath("../models")
-GEN_MODELS_FOLDER = os.path.abspath("../models/generated")
-GEN_DATA_FOLDER = os.path.abspath("../data/generated")
 ACTION = "train"  # Options: ("train", "tune")
 EPOCHS = 1000
 

@@ -2,15 +2,29 @@ from matplotlib.font_manager import FontProperties
 from matplotlib import pyplot as plt
 import matplotlib.colors as mcolors
 from scipy.stats import pearsonr
+import configuration as conf
 import seaborn as sns
 import pandas as pd
 import numpy as np
+import argparse
 import helpers
 
-DATA = 'unet'  # unet, diffwave, p2p
+# Add support for arguments
+parser = argparse.ArgumentParser()
+parser.add_argument('-n', '--network', type=str, help='Which network to test (unet, diffwave, pulse2pulse)')
+parser.add_argument('-i', '--index', type=str, help='Last index of the selected models .csv file)')
+args = parser.parse_args()
+
+if args.network:
+    conf.MODEL = args.network
+
+# Last index of the selected models .csv file
+LAST_CSV_INDEX = 9
+if args.index:
+    LAST_CSV_INDEX = args.index
 
 
-def get_statistics(data):
+def get_statistics():
     _, test_dataloader = helpers.get_dataloader(target='test', batch_size=1, shuffle=False)
 
     rr_list = []
@@ -42,11 +56,8 @@ def get_statistics(data):
         r_peak_i_list.append(r_peak_i)
         r_peak_v1_list.append(r_peak_v1)
 
-    for file_index in range(0, 952):
-        if data == 'p2p':
-            ecg_df = pd.read_csv(f"{data}/pulse2pulse-{file_index}.csv")
-        else:
-            ecg_df = pd.read_csv(f"{data}/{data}-{file_index}.csv")
+    for file_index in range(0, LAST_CSV_INDEX):
+        ecg_df = pd.read_csv(f"{conf.GEN_DATA_FOLDER}/{conf.MODEL}-{file_index}.csv")
 
         rr = ecg_df.loc[0, 'rr']
         qrs = ecg_df.loc[0, 'qrs']
@@ -93,7 +104,7 @@ def get_statistics(data):
 def get_heart_rate_plot(ventricular_rate_list):
     sns.set_style('darkgrid')
 
-    # v_rate_list = get_std_and_mean(DATA)
+    # v_rate_list = get_std_and_mean(conf.MODEL)
     l = [int(x) for x in ventricular_rate_list]
 
     left_border = 60
@@ -126,14 +137,14 @@ def get_heart_rate_plot(ventricular_rate_list):
     plt.ylabel('Count', fontproperties=font_axis_labels)
     plt.xticks(fontproperties=font_axis_labels)
     plt.yticks(fontproperties=font_axis_labels)
-    plt.savefig(f'hr_{DATA}.pdf')
+    plt.savefig(f'{conf.PLOTS_FOLDER}/hr_{conf.MODEL}.pdf')
 
 
 # get_heart_rate_plot(ventricular_rate_list)
 
 
 def get_qt_rr_plot():
-    generated_rr_list, generated_qt_list, rr_list, qt_list = get_statistics(DATA)
+    generated_rr_list, generated_qt_list, rr_list, qt_list = get_statistics()
 
     sns.set_style("darkgrid")
 
@@ -178,7 +189,6 @@ def get_qt_rr_plot():
     plt.title("UNet - Generated vs Real ECG Distributions", fontproperties=font_title)
     plt.xticks(fontproperties=font_axis_labels)
     plt.yticks(fontproperties=font_axis_labels)
-    plt.savefig(f'qt_rr_{DATA}.pdf')
-
+    plt.savefig(f'{conf.PLOTS_FOLDER}/qt_rr_{conf.MODEL}.pdf')
 
 get_qt_rr_plot()

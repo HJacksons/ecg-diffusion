@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 import argparse
 import helpers
+import os.path
 import torch
 
 helpers.create_folder_if_not_exists(conf.PLOTS_FOLDER)
@@ -15,15 +16,17 @@ helpers.create_folder_if_not_exists(conf.GEN_DATA_FOLDER)
 parser = argparse.ArgumentParser()
 parser.add_argument('-f', '--files', type=int, help='Number of files to generate and plot')
 parser.add_argument('-n', '--network', type=str, help='Which network to test (unet, diffwave, pulse2pulse)')
+parser.add_argument('-m', '--models', type=str, help='Path where the pre-trained models are stored')
 args = parser.parse_args()
 
-NUMBER_OF_FILES_TO_GENERATE = 1
-
+NUMBER_OF_FILES_TO_GENERATE = 10
 if args.files:
     NUMBER_OF_FILES_TO_GENERATE = args.files
-
 if args.network:
     conf.MODEL = args.network
+if args.models:
+    conf.MODELS_FOLDER = os.path.abspath(args.models)
+    conf.GEN_MODELS_FOLDER = os.path.abspath(args.models + '/generated')
 
 # Init the pod that houses the models
 model_container = ModelPod()
