@@ -16,7 +16,7 @@ helpers.create_folder_if_not_exists(conf.GEN_MODELS_FOLDER)
 
 # Add support for arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('-n', '--network', type=str, help='Which network to test (unet, diffwave, pulse2pulse)')
+parser.add_argument('-n', '--network', type=str, help='Which network to train (unet, diffwave, pulse2pulse)')
 parser.add_argument('-d', '--dataset', type=str, help='Dataset path')
 args = parser.parse_args()
 

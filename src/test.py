@@ -14,8 +14,8 @@ helpers.create_folder_if_not_exists(conf.GEN_DATA_FOLDER)
 
 # Add support for arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('-f', '--files', type=int, help='Number of files to generate and plot')
 parser.add_argument('-n', '--network', type=str, help='Which network to test (unet, diffwave, pulse2pulse)')
+parser.add_argument('-f', '--files', type=int, help='Number of files to generate and plot')
 parser.add_argument('-m', '--models', type=str, help='Path where the pre-trained models are stored')
 args = parser.parse_args()
 
