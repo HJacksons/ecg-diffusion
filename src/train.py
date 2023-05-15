@@ -70,7 +70,7 @@ def training_loop():
 
         # If we sample data, plot and save
         plot_filename = None
-        if x:
+        if x is not None:
             plot_filename = f'{conf.PLOTS_FOLDER}/{conf.MODEL}-epoch-{epoch}'
             helpers.create_and_save_plot(x[0].cpu().detach().numpy(), filename=plot_filename)
 
