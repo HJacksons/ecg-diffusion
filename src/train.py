@@ -1,6 +1,8 @@
 from pods.pod import ModelPod
 import configuration as conf
 from tqdm.auto import tqdm
+import argparse
+import os.path
 import helpers
 import wandb
 import torch
@@ -11,6 +13,17 @@ helpers.create_folder_if_not_exists(conf.PLOTS_FOLDER)
 helpers.create_folder_if_not_exists(conf.MODELS_FOLDER)
 helpers.create_folder_if_not_exists(conf.GEN_DATA_FOLDER)
 helpers.create_folder_if_not_exists(conf.GEN_MODELS_FOLDER)
+
+# Add support for arguments
+parser = argparse.ArgumentParser()
+parser.add_argument('-n', '--network', type=str, help='Which network to train (unet, diffwave, pulse2pulse)')
+parser.add_argument('-d', '--dataset', type=str, help='Dataset path')
+args = parser.parse_args()
+
+if args.network:
+    conf.MODEL = args.network
+if args.dataset:
+    conf.DATASET_PATH = os.path.abspath(args.dataset)
 
 # Init WANDB if needed
 if conf.USE_WEIGHTS_AND_BIASES:

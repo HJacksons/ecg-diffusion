@@ -1,17 +1,30 @@
+from matplotlib.font_manager import FontProperties
+from matplotlib import pyplot as plt
+import matplotlib.colors as mcolors
+from scipy.stats import pearsonr
+import configuration as conf
+import seaborn as sns
 import pandas as pd
 import numpy as np
-from matplotlib import pyplot as plt
-import seaborn as sns
-import matplotlib.colors as mcolors
-from matplotlib.font_manager import FontProperties
-from scipy.stats import pearsonr
+import argparse
 import helpers
 
+# Add support for arguments
+parser = argparse.ArgumentParser()
+parser.add_argument('-n', '--network', type=str, help='Which network to test (unet, diffwave, pulse2pulse)')
+parser.add_argument('-i', '--index', type=str, help='Last index of the selected models .csv file)')
+args = parser.parse_args()
 
-DATA = 'unet'  # unet, diffwave, p2p
+if args.network:
+    conf.MODEL = args.network
 
-def get_statistics(data):
+# Last index of the selected models .csv file
+LAST_CSV_INDEX = 9
+if args.index:
+    LAST_CSV_INDEX = args.index
 
+
+def get_statistics():
     _, test_dataloader = helpers.get_dataloader(target='test', batch_size=1, shuffle=False)
 
     rr_list = []
@@ -28,15 +41,13 @@ def get_statistics(data):
     generated_r_peak_i_list = []
     generated_r_peak_v1_list = []
 
-
     for _, (_, features) in enumerate(test_dataloader, 0):
-
-        rr = int(features[:,0].squeeze().cpu().numpy())
-        qrs = int(features[:,1].squeeze().cpu().numpy())
-        qt = int(features[:,3].squeeze().cpu().numpy())
-        v_rate = int(features[:,4].squeeze().cpu().numpy())
-        r_peak_i = int(features[:,5].squeeze().cpu().numpy())
-        r_peak_v1 = int(features[:,7].squeeze().cpu().numpy())
+        rr = int(features[:, 0].squeeze().cpu().numpy())
+        qrs = int(features[:, 1].squeeze().cpu().numpy())
+        qt = int(features[:, 3].squeeze().cpu().numpy())
+        v_rate = int(features[:, 4].squeeze().cpu().numpy())
+        r_peak_i = int(features[:, 5].squeeze().cpu().numpy())
+        r_peak_v1 = int(features[:, 7].squeeze().cpu().numpy())
 
         rr_list.append(rr)
         qrs_list.append(qrs)
@@ -44,14 +55,10 @@ def get_statistics(data):
         v_rate_list.append(v_rate)
         r_peak_i_list.append(r_peak_i)
         r_peak_v1_list.append(r_peak_v1)
-    
 
-    for file_index in range(0,952):
-        if data == 'p2p':
-            ecg_df = pd.read_csv(f"{data}/pulse2pulse-{file_index}.csv")
-        else:
-            ecg_df = pd.read_csv(f"{data}/{data}-{file_index}.csv")
-        
+    for file_index in range(0, LAST_CSV_INDEX):
+        ecg_df = pd.read_csv(f"{conf.GEN_DATA_FOLDER}/{conf.MODEL}-{file_index}.csv")
+
         rr = ecg_df.loc[0, 'rr']
         qrs = ecg_df.loc[0, 'qrs']
         qt = ecg_df.loc[0, 'qt']
@@ -97,16 +104,15 @@ def get_statistics(data):
 def get_heart_rate_plot(ventricular_rate_list):
     sns.set_style('darkgrid')
 
-    # v_rate_list = get_std_and_mean(DATA)
+    # v_rate_list = get_std_and_mean(conf.MODEL)
     l = [int(x) for x in ventricular_rate_list]
-
 
     left_border = 60
     right_border = 100
     main_color = mcolors.to_rgb('steelblue')
     highlight_color = mcolors.to_rgb('rosybrown')
 
-    binvals, bins, patches = plt.hist(l, bins = 50, color=main_color)
+    binvals, bins, patches = plt.hist(l, bins=50, color=main_color)
 
     bin_centers = 0.5 * (bins[:-1] + bins[1:])
 
@@ -127,18 +133,19 @@ def get_heart_rate_plot(ventricular_rate_list):
     font_axis_labels.set_size(14)
 
     plt.title('DiffWave Generated ECG Distribution', fontproperties=font_title)
-    plt.xlabel('Heart Rate [bpm]', fontproperties=font_axis_labels)    
+    plt.xlabel('Heart Rate [bpm]', fontproperties=font_axis_labels)
     plt.ylabel('Count', fontproperties=font_axis_labels)
     plt.xticks(fontproperties=font_axis_labels)
     plt.yticks(fontproperties=font_axis_labels)
-    plt.savefig(f'hr_{DATA}.pdf')
+    plt.savefig(f'{conf.PLOTS_FOLDER}/hr_{conf.MODEL}.pdf')
+
 
 # get_heart_rate_plot(ventricular_rate_list)
 
 
 def get_qt_rr_plot():
-    generated_rr_list, generated_qt_list, rr_list, qt_list = get_statistics(DATA)
-  
+    generated_rr_list, generated_qt_list, rr_list, qt_list = get_statistics()
+
     sns.set_style("darkgrid")
 
     sns.scatterplot(x=generated_rr_list, y=generated_qt_list, color="rosybrown", label='generated', s=10)
@@ -165,7 +172,6 @@ def get_qt_rr_plot():
     sns.lineplot(x=x, y=y_real, color='midnightblue', label=f'real Pearson r`2 = {pow(r_real, 2):.2f}')
     sns.lineplot(x=x, y=y_generated, color="brown", label=f'generated Pearson r`2 = {pow(r_generated, 2):.2f}')
 
-
     font_title = FontProperties()
     font_title.set_family('sans-serif')
     font_title.set_size(16)
@@ -183,6 +189,6 @@ def get_qt_rr_plot():
     plt.title("UNet - Generated vs Real ECG Distributions", fontproperties=font_title)
     plt.xticks(fontproperties=font_axis_labels)
     plt.yticks(fontproperties=font_axis_labels)
-    plt.savefig(f'qt_rr_{DATA}.pdf')
+    plt.savefig(f'{conf.PLOTS_FOLDER}/qt_rr_{conf.MODEL}.pdf')
 
 get_qt_rr_plot()
