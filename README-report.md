@@ -1,5 +1,5 @@
 # Electrocardiogram Generation using Diffusion
-De-noising diffusion probabilistic models
+De-noising Diffusion Probabilistic Models
 
 ## Getting started
 
