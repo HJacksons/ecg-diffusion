@@ -66,7 +66,7 @@ def training_loop():
         train_loss_average = sum(train_loss_history)/len(train_loss_history)
 
         # Run sampling operations
-        x = model_container.pod.sampling(epoch=epoch)
+        x = model_container.pod.sampling()
 
         # If we sample data, plot and save
         plot_filename = None
